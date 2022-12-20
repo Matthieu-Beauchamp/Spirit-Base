@@ -1,0 +1,11 @@
+.vscode
+.idea
+.git # ?
+
+**/doc/**
+**/latex/**
+**/html/**
+
+**/build*/**
+**/cmake-build*/**
+**/stage/**

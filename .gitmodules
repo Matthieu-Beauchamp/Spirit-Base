@@ -1,0 +1,12 @@
+[submodule "ext_libs/Catch2"]
+	path = ext_libs/Catch2
+	url = https://github.com/catchorg/Catch2
+[submodule "ext_libs/spdlog"]
+	path = ext_libs/spdlog
+	url = https://github.com/gabime/spdlog
+[submodule "ext_libs/boost"]
+	path = ext_libs/boost
+	url = https://github.com/boostorg/boost
+[submodule "test/Catch2"]
+	path = test/Catch2
+	url = https://github.com/catchorg/Catch2
