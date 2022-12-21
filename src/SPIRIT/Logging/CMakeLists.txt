@@ -1,5 +1,6 @@
 target_sources(spirit-base PRIVATE
     Logging.cpp
-    ColoredStream.cpp    
+    AnsiSequence.cpp
+    AnsiStream.cpp
     )
 

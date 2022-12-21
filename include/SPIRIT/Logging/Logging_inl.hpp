@@ -33,7 +33,6 @@
 
 namespace sp
 {
-
 namespace IO
 {
 
@@ -47,7 +46,7 @@ format(const std::string & str, Args &&... args)
 }
 
 // ////////////////////////////////////////////////////////
-template <class T, std::enable_if_t<sp::Printable<T>::value, bool> = true>
+template <class T, std::enable_if_t<sp::traits::Printable<T>::value, bool> = true>
 std::string
 format(const T & printable)
 {
@@ -60,117 +59,7 @@ format(const T & printable)
     return txt.str();
 }
 
-
-// ////////////////////////////////////////////////////////
-template <terminalColorTarget t>
-std::ostream &
-operator<<(std::ostream & os, TerminalColor<t> color)
-{
-    return priv::AnsiSGR::putCode(os, (sp::Int32)t * 10 + color.c);
-}
-
-// ////////////////////////////////////////////////////////
-template <terminalColorTarget t>
-std::ostream &
-operator<<(std::ostream & os, RgbTerminalColor<t> c)
-{
-    sp::Int32 codes[5]{(sp::Int32)t * 10 + RgbTerminalColor<t>::declareRgbColor,
-                       RgbTerminalColor<t>::declareRgbSequence,
-                       c.r(),
-                       c.g(),
-                       c.b()};
-
-    return priv::AnsiSGR::putCodes(os, codes);
-}
-
-// ////////////////////////////////////////////////////////
-template <terminalColorTarget t>
-sp::Uint8
-RgbTerminalColor<t>::r() const
-{
-    return _r;
-}
-
-// ////////////////////////////////////////////////////////
-template <terminalColorTarget t>
-sp::Uint8
-RgbTerminalColor<t>::g() const
-{
-    return _g;
-}
-
-// ////////////////////////////////////////////////////////
-template <terminalColorTarget t>
-sp::Uint8
-RgbTerminalColor<t>::b() const
-{
-    return _b;
-}
-
-
-// ////////////////////////////////////////////////////////
-template <terminalColorTarget t>
-std::string
-textGradient(const std::string & txt,
-             RgbTerminalColor<t> firstChar,
-             RgbTerminalColor<t> lastChar,
-             bool resetColorAfter)
-{
-    // We can't use our Math lib since this is part of core,
-    // thus we do our own here
-
-    float step[3]{};
-    sp::Int16 deltaCols[3]{
-        (static_cast<sp::Int16>((sp::Int16)lastChar.r() - firstChar.r())),
-        (static_cast<sp::Int16>((sp::Int16)lastChar.g() - firstChar.g())),
-        (static_cast<sp::Int16>((sp::Int16)lastChar.b() - firstChar.b()))};
-
-    std::size_t nChars = txt.size();
-    for (sp::Int32 i = 0; i < 3; ++i)
-        step[i] = (float)deltaCols[i] / (nChars - 1);
-
-    std::stringstream ss{};
-    for (std::size_t i = 0; i < nChars; ++i)
-    {
-        ss << RgbTerminalColor<t>{static_cast<sp::Uint8>(std::round(
-                                      (float)firstChar.r() + (step[0] * i))),
-                                  static_cast<sp::Uint8>(std::round(
-                                      (float)firstChar.g() + (step[1] * i))),
-                                  static_cast<sp::Uint8>(std::round(
-                                      (float)firstChar.b() + (step[2] * i)))}
-           << txt[i];
-    }
-
-    if (resetColorAfter)
-        ss << TerminalColor<t>{TerminalColor<t>::defaultCol};
-
-    return ss.str();
-}
-
 } // namespace IO
-
-namespace priv
-{
-
-// ////////////////////////////////////////////////////////
-template <sp::Int32 nCodes>
-std::ostream &
-AnsiSGR::putCodes(std::ostream & os, sp::Int32 (&codes)[nCodes])
-{
-    if (enableAnsiColor)
-    {
-        os << CSI;
-        for (sp::Int32 i = 0; i < nCodes - 1; ++i)
-            os << codes[i] << ";";
-
-        os << codes[nCodes - 1] << end;
-    }
-    return os;
-}
-
-} // namespace priv
-
-
 } // namespace sp
 
 

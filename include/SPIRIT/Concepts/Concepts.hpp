@@ -34,12 +34,12 @@ namespace sp
 
 ////////////////////////////////////////////////////////////
 /// \defgroup Concepts Concepts
-/// 
+///
 /// \brief Defines helpers for identifying specific traits of objetcs and functions
-/// 
+///
 ////////////////////////////////////////////////////////////
-
-
+namespace traits
+{
 
 // TODO: Macro magic here?
 // template<class T, class = void>
@@ -56,12 +56,14 @@ namespace sp
 ////////////////////////////////////////////////////////////
 /// \ingroup Concepts
 /// \brief Any object which can be sent to an output stream with operator <<
-/// 
+///
 /// That is, defines Printable<T>::value as true
 ///     for any object for which \code std::cout << object; \endcode is valid.
 /// Otherwise, defines Printable<T>::value as false
-/// 
+///
 ////////////////////////////////////////////////////////////
+
+// Probably does not work
 template <class T, class = void>
 struct Printable : public std::false_type
 {
@@ -69,12 +71,31 @@ struct Printable : public std::false_type
 
 
 template <class T>
-struct Printable< T,
-    std::void_t<decltype(std::declval<std::ostream &>() << std::declval<T>())>>
+struct Printable<
+    T,
+    std::enable_if_t<true, decltype(std::declval<std::ostream &>() << std::declval<T>())>>
     : public std::true_type
 {
 };
 
+
+// Does not work
+template <class T, class = void>
+struct isStream : public std::false_type
+{
+};
+
+template <class T>
+struct isStream<
+    T,
+    std::enable_if_t<std::is_base_of<std::basic_ios<typename T::char_type>, T>::value, bool>>
+    : public std::true_type
+{
+};
+
+
+
+} // namespace traits
 
 } // namespace sp
 

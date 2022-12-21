@@ -36,7 +36,8 @@ macro(addTest testName ...)
 endmacro()
 
 
-addTest(logging-test testFileBuf.cpp)
+addTest(fileBuf-test testFileBuf.cpp)
+addTest(ansiStream-test testAnsiStream.cpp)
 
 add_custom_target(TestAll ALL
     COMMAND ctest -C $<CONFIG> --output-on-failure

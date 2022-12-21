@@ -3,27 +3,35 @@ Language:        Cpp
 # TODO: https://clang.llvm.org/docs/ClangFormatStyleOptions.html
 
 AccessModifierOffset: -4
-AlignAfterOpenBracket: Align
-AlignConsecutiveMacros: false
+AlignAfterOpenBracket: BlockIndent
+AlignArrayOfStructures: Left
 AlignConsecutiveAssignments: true
 AlignConsecutiveDeclarations: false
+
+AlignConsecutiveMacros: AcrossEmptyLines
 AlignEscapedNewlines: Right
 AlignOperands: true
 AlignTrailingComments: true
+
 AllowAllArgumentsOnNextLine: false
-AllowAllConstructorInitializersOnNextLine: true
+AllowAllConstructorInitializersOnNextLine: false # This option is deprecated. See NextLine of PackConstructorInitializers.
 AllowAllParametersOfDeclarationOnNextLine: false
+
 AllowShortBlocksOnASingleLine: Always
-AllowShortCaseLabelsOnASingleLine: false
+AllowShortCaseLabelsOnASingleLine: true
+AllowShortFunctionsOnASingleLine: All
+AllowShortIfStatementsOnASingleLine: AllIfsAndElse
 AllowShortLambdasOnASingleLine: All
-AllowShortIfStatementsOnASingleLine: Never
-AllowShortLoopsOnASingleLine: false
+AllowShortLoopsOnASingleLine: true
+
 AlwaysBreakAfterDefinitionReturnType: All
 AlwaysBreakAfterReturnType: All
 AlwaysBreakBeforeMultilineStrings: false
 AlwaysBreakTemplateDeclarations: Yes
+
 BinPackArguments: false
 BinPackParameters: false
+
 BraceWrapping:
   AfterCaseLabel:  true
   AfterClass:      true
@@ -41,8 +49,9 @@ BraceWrapping:
   SplitEmptyFunction: true
   SplitEmptyRecord: true
   SplitEmptyNamespace: true
-BreakBeforeBinaryOperators: All
 BreakBeforeBraces: Custom
+  
+BreakBeforeBinaryOperators: All
 BreakBeforeInheritanceComma: false
 BreakInheritanceList: BeforeColon
 BreakBeforeTernaryOperators: true
@@ -61,12 +70,16 @@ DeriveLineEnding: true
 DerivePointerAlignment: false
 DisableFormat:   false
 ExperimentalAutoDetectBinPacking: false
+EmptyLineAfterAccessModifier: Always
+EmptyLineBeforeAccessModifier: Always
+
 FixNamespaceComments: true
 ForEachMacros:
   - foreach
   - Q_FOREACH
   - BOOST_FOREACH
-IncludeBlocks:   Preserve
+
+IncludeBlocks:   Regroup
 IncludeCategories:
   - Regex:           '^"(llvm|llvm-c|clang|clang-c)/'
     Priority:        2
@@ -79,14 +92,16 @@ IncludeCategories:
     SortPriority:    0
 IncludeIsMainRegex: '(Test)?$'
 IncludeIsMainSourceRegex: ''
+
 IndentCaseLabels: false
 IndentGotoLabels: true
 IndentPPDirectives: AfterHash
 IndentWidth:     4
 IndentWrappedFunctionNames: false
+
 JavaScriptQuotes: Leave
 JavaScriptWrapImports: true
-KeepEmptyLinesAtTheStartOfBlocks: true
+KeepEmptyLinesAtTheStartOfBlocks: false
 MacroBlockBegin: ''
 MacroBlockEnd:   ''
 MaxEmptyLinesToKeep: 2
@@ -97,7 +112,7 @@ ObjCSpaceAfterProperty: false
 ObjCSpaceBeforeProtocolList: true
 PenaltyBreakAssignment: 2
 PenaltyBreakBeforeFirstCallParameter: 19
-PenaltyBreakComment: 3090000000
+PenaltyBreakComment: 30000 # Don't break license!
 PenaltyBreakFirstLessLess: 120
 PenaltyBreakString: 1000
 PenaltyBreakTemplateDeclaration: 1000
@@ -133,4 +148,3 @@ StatementMacros:
 TabWidth:        4
 UseCRLF:         false
 UseTab:          Never
-AllowShortFunctionsOnASingleLine: All

@@ -9,8 +9,8 @@ using namespace sp::IO;
 
 struct MovingColors
 {
-    MovingColors(TextColor base,
-                 const std::vector<TextColor> & movingColors,
+    MovingColors(FgColor base,
+                 const std::vector<FgColor> & movingColors,
                  sp::Uint32 nColors)
     {
         sp::Uint32 i = 0;
@@ -26,7 +26,7 @@ struct MovingColors
         }
     }
 
-    const std::list<TextColor> &
+    const std::list<FgColor> &
     next()
     {
         auto col = colors.back();
@@ -36,7 +36,7 @@ struct MovingColors
     }
 
 private:
-    std::list<TextColor> colors{};
+    std::list<FgColor> colors{};
 };
 
 
@@ -46,7 +46,7 @@ main()
     sp::SpiritInit spirit{};
     SPIRIT_ASSERT(sp::SpiritInit::isInit())
 
-    std::initializer_list<TerminalModifier> mods = {italic, bold};
+    std::initializer_list<AnsiStyle> mods = {italic, bold};
     std::vector<std::string> words               = {"The ",
                                       "Core ",
                                       "of ",
@@ -69,7 +69,7 @@ main()
 
         for (int j = 0; j < words.size(); ++j)
             coloredWords.push_back(
-                modify(colorText(words[j], *c++, false), mods));
+                modify(colorFg(words[j], *c++, false), mods));
 
         std::string msg = "";
         for (auto && w : coloredWords)

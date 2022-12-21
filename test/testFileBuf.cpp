@@ -1,10 +1,9 @@
-
 #include "catch2/catch_all.hpp"
 #include <stdio.h>
 #include <string>
 #include <vector>
 
-#include "SPIRIT/Logging/FileBuf.hpp"
+#include "SPIRIT/Logging/details/FileBuf.hpp"
 
 
 TEST_CASE("basic_streambuf behavior of FileBuffer", "[FileBuffer]")
@@ -15,7 +14,7 @@ TEST_CASE("basic_streambuf behavior of FileBuffer", "[FileBuffer]")
     {
         FILE * f = fopen("tempConstr.txt", "w");
         // Note that Filebuf does not open nor close any FILE ever
-        sp::IOFileBuf filebuf{f};
+        sp::details::IOFileBuf filebuf{f};
 
         REQUIRE(filebuf.file() == f);
 
@@ -54,7 +53,7 @@ TEST_CASE("basic_streambuf behavior of FileBuffer", "[FileBuffer]")
     {
         FILE * f = fopen("tempOut.txt", "w+");
 
-        sp::OutFileBuf filebuf{f};
+        sp::details::OutFileBuf filebuf{f};
         for (std::string str : strs)
         {
             size_t sz = str.size();
@@ -68,7 +67,10 @@ TEST_CASE("basic_streambuf behavior of FileBuffer", "[FileBuffer]")
             {
                 REQUIRE(filebuf.sputn(str.c_str(), sz) == sz);
             }
-            filebuf.pubsync();
+
+            // This would cause an ostream to stop outputting
+            // Initially we were also calling underflow, causing us to return eof
+            REQUIRE(filebuf.pubsync() != -1);
 
             // Ensure we wrote the correct amount,
             // Also, tests that external usage of the file does not break the buffer's state
@@ -94,7 +96,7 @@ TEST_CASE("basic_streambuf behavior of FileBuffer", "[FileBuffer]")
         FILE * f = fopen("tempIn.txt", "w+");
         fwrite(expected.data(), sizeof(char), expected.size(), f);
 
-        sp::InFileBuf filebuf{f};
+        sp::details::InFileBuf filebuf{f};
         for (std::string str : strs)
         {
             size_t sz = str.size();
@@ -116,7 +118,7 @@ TEST_CASE("basic_streambuf behavior of FileBuffer", "[FileBuffer]")
     {
         FILE * f = fopen("tempIO.txt", "w+");
 
-        sp::IOFileBuf filebuf{f};
+        sp::details::IOFileBuf filebuf{f};
         for (std::string str : strs)
         {
             size_t sz = str.size();
@@ -165,7 +167,7 @@ TEST_CASE("basic_streambuf behavior of FileBuffer", "[FileBuffer]")
             wstrs.push_back(ws);
         }
 
-        sp::IOFileBuf<128, wchar_t> filebuf{f};
+        sp::details::wIOFileBuf filebuf{f};
         for (std::wstring str : wstrs)
         {
             size_t sz = str.size();

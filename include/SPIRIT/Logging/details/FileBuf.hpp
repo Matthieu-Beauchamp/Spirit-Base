@@ -26,10 +26,13 @@
 #ifndef SPIRIT_FILEBUF_HPP
 #define SPIRIT_FILEBUF_HPP
 
+#include <array>
 #include <stdio.h>
 #include <streambuf>
 
 namespace sp
+{
+namespace details
 {
 
 template <typename char_type>
@@ -54,7 +57,8 @@ public:
     }
 
 protected:
-    // TODO: Error handling on C function calls (positioning, read, write)
+
+    // TODO: *PRIORITY* Error handling on C function calls (positioning, read, write)
 
     ////////////////////////////////////////////////////////////
     // Locales
@@ -109,13 +113,7 @@ protected:
     int
     sync() override
     {
-        int_type err1 = this->overflow(traits_type::eof());
-        int_type err2 = this->underflow();
-
-        if (isEof(err1) || isEof(err2))
-            return -1;
-
-        return 0;
+        return this->overflow(traits_type::eof());
     }
 
     ////////////////////////////////////////////////////////////
@@ -197,8 +195,8 @@ struct ioBuffers<std::ios_base::in, bufSize, char_type>
             in.pos = pos;
     }
 
-    sp::ioBuffer<bufSize, char_type> in;
-    sp::ioBuffer<0, char_type> out;
+    sp::details::ioBuffer<bufSize, char_type> in;
+    sp::details::ioBuffer<0, char_type> out;
 };
 
 template <std::streamsize bufSize, typename char_type>
@@ -211,8 +209,8 @@ struct ioBuffers<std::ios_base::out, bufSize, char_type>
             out.pos = pos;
     }
 
-    sp::ioBuffer<0, char_type> in;
-    sp::ioBuffer<bufSize, char_type> out;
+    sp::details::ioBuffer<0, char_type> in;
+    sp::details::ioBuffer<bufSize, char_type> out;
 };
 
 template <std::streamsize bufSize, typename char_type>
@@ -227,8 +225,8 @@ struct ioBuffers<std::ios_base::in | std::ios_base::out, bufSize, char_type>
             out.pos = pos;
     }
 
-    sp::ioBuffer<bufSize, char_type> in;
-    sp::ioBuffer<bufSize, char_type> out;
+    sp::details::ioBuffer<bufSize, char_type> in;
+    sp::details::ioBuffer<bufSize, char_type> out;
 };
 
 
@@ -244,15 +242,16 @@ struct ioBuffers<std::ios_base::in | std::ios_base::out, bufSize, char_type>
 ///
 ////////////////////////////////////////////////////////////
 template <std::ios_base::openmode mode, std::streamsize bufSize, typename char_type>
-class FileBuf : public sp::FileBufBase<char_type>
+class FileBuf : public sp::details::FileBufBase<char_type>
 {
-    typedef sp::FileBufBase<char_type> Base;
+    typedef sp::details::FileBufBase<char_type> Base;
 
 public:
-    typedef typename sp::FileBufBase<char_type>::traits_type traits_type;
-    typedef typename sp::FileBufBase<char_type>::int_type int_type;
-    typedef typename sp::FileBufBase<char_type>::pos_type pos_type;
-    typedef typename sp::FileBufBase<char_type>::off_type off_type;
+    typedef
+        typename sp::details::FileBufBase<char_type>::traits_type traits_type;
+    typedef typename sp::details::FileBufBase<char_type>::int_type int_type;
+    typedef typename sp::details::FileBufBase<char_type>::pos_type pos_type;
+    typedef typename sp::details::FileBufBase<char_type>::off_type off_type;
 
     // static_assert(sizeof(char_type) < sizeof(int_type),
     //               "char_type cannot be bigger than int_type, otherwise eof "
@@ -263,9 +262,8 @@ public:
 
     FileBuf(FILE * file) : Base{file}
     {
-        assert(this->seekpos(0) == 0 && "FileBufBase must rewind to start");
-        // (getCurrentPos is in bytes, 0 is the only guaranteed safe position)
-        // buffer positions are default at 0.
+        // 0 is the only guaranteed safe position (in case of wide chars)
+        this->seekpos(0);
 
         this->setp(io.out.buf.begin(), io.out.buf.end());
         this->setg(io.in.buf.begin(), io.in.buf.end(), io.in.buf.end());
@@ -356,6 +354,37 @@ protected:
     ////////////////////////////////////////////////////////////
 
     // TODO: xputn can be overloaded for better efficiency
+    std::streamsize
+    xsputn(const char_type * str, std::streamsize n) override
+    {
+        std::streamsize ret = 0;
+        while (ret < n)
+        {
+            const std::streamsize buf_len = this->epptr() - this->pptr();
+            if (buf_len)
+            {
+                const std::streamsize remaining = n - ret;
+                const std::streamsize len       = std::min(buf_len, remaining);
+                traits_type::copy(this->pptr(), str, len);
+                ret += len;
+                str += len;
+                this->pbump(len);
+            }
+
+            if (ret < n)
+            {
+                int_type ch = this->overflow(traits_type::to_int_type(*str));
+                if (!traits_type::eq_int_type(ch, traits_type::eof()))
+                {
+                    ++ret;
+                    ++str;
+                }
+                else
+                    break;
+            }
+        }
+        return ret;
+    }
 
     int_type
     overflow(int_type ch) override
@@ -395,22 +424,37 @@ protected:
     // TODO: pbackfail
 
 private:
-    sp::ioBuffers<mode, bufSize, char_type> io{};
+    sp::details::ioBuffers<mode, bufSize, char_type> io{};
 };
 
-constexpr static std::streamsize bufSizeDefault = 128;
+constexpr static std::streamsize bufSizeDefault = 5;
 typedef char charTypeDefault;
+typedef wchar_t wCharTypeDefault;
 
-template <std::streamsize bufSize = bufSizeDefault, typename char_type = charTypeDefault>
-using OutFileBuf = sp::FileBuf<std::ios_base::out, bufSize, char_type>;
+typedef sp::details::FileBuf<std::ios_base::out, bufSizeDefault, charTypeDefault>
+    OutFileBuf;
 
-template <std::streamsize bufSize = bufSizeDefault, typename char_type = charTypeDefault>
-using InFileBuf = sp::FileBuf<std::ios_base::in, bufSize, char_type>;
+typedef sp::details::FileBuf<std::ios_base::in, bufSizeDefault, charTypeDefault>
+    InFileBuf;
 
-template <std::streamsize bufSize = bufSizeDefault, typename char_type = charTypeDefault>
-using IOFileBuf
-    = sp::FileBuf<std::ios_base::in | std::ios_base::out, bufSize, char_type>;
+typedef sp::details::FileBuf<std::ios_base::in | std::ios_base::out,
+                             bufSizeDefault,
+                             charTypeDefault>
+    IOFileBuf;
 
+typedef sp::details::FileBuf<std::ios_base::out, bufSizeDefault, wCharTypeDefault>
+    wOutFileBuf;
+
+typedef sp::details::FileBuf<std::ios_base::in, bufSizeDefault, wCharTypeDefault>
+    wInFileBuf;
+
+typedef sp::details::FileBuf<std::ios_base::in | std::ios_base::out,
+                             bufSizeDefault,
+                             wCharTypeDefault>
+    wIOFileBuf;
+
+
+} // namespace details
 } // namespace sp
 
 

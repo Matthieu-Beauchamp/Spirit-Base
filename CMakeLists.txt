@@ -13,6 +13,9 @@ include(Macros)
 # C++ config
 ############################################################
 set(CMAKE_CXX_STANDARD 20)
+# Required recent feaatures (for compiler support):
+#   std::source_location
+
 
 # Some useful tags for my bad memory
 # "-save-temps -O3 -march=native -ffast-math -Wall -Wextra"
