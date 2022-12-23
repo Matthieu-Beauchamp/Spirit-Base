@@ -23,12 +23,13 @@
 ////////////////////////////////////////////////////////////
 
 
-#include <queue>
 #include "Timer.hpp"
+
+#include <queue>
 
 
 #ifndef SPIRIT_ENGINE_CLOCK_H
-#define SPIRIT_ENGINE_CLOCK_H
+#    define SPIRIT_ENGINE_CLOCK_H
 
 
 namespace sp
@@ -37,6 +38,7 @@ namespace sp
 class Clock
 {
 public:
+
     typedef std::chrono::nanoseconds Nanoseconds;
 
 private:
@@ -52,18 +54,27 @@ public:
 
     Clock(Nanoseconds minimumTickPeriod = Nanoseconds{0});
 
-    Nanoseconds getCurrentDt() const;
+    Nanoseconds
+    getCurrentDt() const;
 
-    Nanoseconds tick();
+    Nanoseconds
+    tick();
 
-    Nanoseconds getAverageTick() const;
+    Nanoseconds
+    getAverageTick() const;
 
-    float getTicksPerSecond() const;
+    float
+    getTicksPerSecond() const;
 
-    void setMinimumTickPeriod(Nanoseconds minTime);
-
+    void
+    setMinimumTickPeriod(Nanoseconds minTime);
+    
+    Nanoseconds
+    getMinimumTickPeriod() const
+    {
+        return this->tickPeriod;
+    }
 };
-
 
 
 struct WindowClock : private sp::Clock
@@ -71,35 +82,40 @@ struct WindowClock : private sp::Clock
 public:
 
     using Clock::Clock;
-    using Clock::tick;
     using Clock::getCurrentDt;
+    using Clock::tick;
 
     std::chrono::nanoseconds
     getFrameTime() const
-    { return this->getAverageTick(); }
+    {
+        return this->getAverageTick();
+    }
 
 
     float
     getFps() const
-    { return this->getTicksPerSecond(); }
+    {
+        return this->getTicksPerSecond();
+    }
 
 
     void
     setFps(float fps = 0)
     {
-        this->setMinimumTickPeriod(std::chrono::nanoseconds
-                                           {(sp::Int32) (fps == 0 ? 0 : 1e9 / fps)}
-                                  );
+        this->setMinimumTickPeriod(std::chrono::nanoseconds{
+            (sp::Int32)(fps == 0 ? 0 : 1e9 / fps)});
     }
 
 
     void
     setFrameTime(std::chrono::nanoseconds dt = std::chrono::nanoseconds{0})
-    { this->setMinimumTickPeriod(dt); }
+    {
+        this->setMinimumTickPeriod(dt);
+    }
 };
 
 
 } // namespace sp
 
 
-#endif //SPIRIT_ENGINE_CLOCK_H
+#endif // SPIRIT_ENGINE_CLOCK_H

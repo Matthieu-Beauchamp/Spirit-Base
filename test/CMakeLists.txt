@@ -38,9 +38,12 @@ endmacro()
 
 addTest(fileBuf-test testFileBuf.cpp)
 addTest(ansiStream-test testAnsiStream.cpp)
+addTest(Logger-test testLogger.cpp)
 
 add_custom_target(TestAll ALL
     COMMAND ctest -C $<CONFIG> --output-on-failure
     WORKING_DIRECTORY ${CMAKE_CURRENT_OUTPUT_DIR} 
+    DEPENDS fileBuf-test ansiStream-test
 )
+
 

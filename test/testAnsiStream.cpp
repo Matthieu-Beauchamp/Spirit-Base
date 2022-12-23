@@ -4,7 +4,7 @@
 
 #include <iomanip>
 #include <ostream>
-
+#include <iosfwd>
 struct UserDefined
 {
     float x;
@@ -16,9 +16,83 @@ struct UserDefined
     }
 };
 
+struct NotPrintable
+{
+};
+
+// TODO: Input is never tested
+// TODO: Printable and isStream concept checks
 
 TEST_CASE("Ansi Stream on connex classes")
 {
+    SECTION("Concepts")
+    {
+        SECTION("Ansi Sequence Detection")
+        {
+            REQUIRE(sp::traits::isAnsiSequence<sp::AnsiSequence>::value);
+            REQUIRE(sp::traits::isAnsiSequence<sp::FgColor>::value);
+            REQUIRE(sp::traits::isAnsiSequence<sp::BgColor>::value);
+            REQUIRE(sp::traits::isAnsiSequence<sp::AnsiStyle>::value);
+            REQUIRE(sp::traits::isAnsiSequence<sp::RgbFgColor>::value);
+
+            REQUIRE(sp::traits::isAnsiSequence<const sp::AnsiSequence &>::value);
+            REQUIRE(sp::traits::isAnsiSequence<const sp::FgColor &>::value);
+            REQUIRE(sp::traits::isAnsiSequence<const sp::BgColor &>::value);
+            REQUIRE(sp::traits::isAnsiSequence<const sp::AnsiStyle &>::value);
+
+            REQUIRE(sp::traits::isAnsiSequence<volatile sp::AnsiSequence &&>::value
+            );
+            REQUIRE(sp::traits::isAnsiSequence<volatile sp::FgColor &&>::value);
+            REQUIRE(sp::traits::isAnsiSequence<volatile sp::BgColor &&>::value);
+            REQUIRE(sp::traits::isAnsiSequence<volatile sp::AnsiStyle &&>::value);
+
+            REQUIRE_FALSE(sp::traits::isAnsiSequence<int>::value);
+            REQUIRE_FALSE(sp::traits::isAnsiSequence<const char *>::value);
+            REQUIRE_FALSE(sp::traits::isAnsiSequence<unsigned char &>::value);
+            REQUIRE_FALSE(sp::traits::isAnsiSequence<float>::value);
+            REQUIRE_FALSE(sp::traits::isAnsiSequence<volatile std::string>::value
+            );
+            REQUIRE_FALSE(sp::traits::isAnsiSequence<void>::value);
+            REQUIRE_FALSE(sp::traits::isAnsiSequence<void *>::value);
+        }
+
+        SECTION("isStream")
+        {
+            REQUIRE(sp::traits::isStream<sp::AnsiStream>::value);
+            REQUIRE(sp::traits::isStream<sp::details::AnsiStreamWrapper<std::ostream>>::value);
+            REQUIRE(sp::traits::isStream<sp::details::AnsiStreamWrapper<std::stringstream>>::value);
+
+            REQUIRE(sp::traits::isStream<std::ostream>::value);
+            REQUIRE(sp::traits::isStream<std::basic_iostream<char>>::value);
+            REQUIRE(sp::traits::isStream<std::basic_iostream<wchar_t>>::value);
+            REQUIRE(sp::traits::isStream<std::basic_stringstream<char>>::value);
+
+            REQUIRE_FALSE(sp::traits::isStream<std::string>::value);
+            REQUIRE_FALSE(sp::traits::isStream<UserDefined>::value);
+            REQUIRE_FALSE(sp::traits::isStream<NotPrintable>::value);
+            REQUIRE_FALSE(sp::traits::isStream<int>::value);
+        }
+
+        SECTION("Printable")
+        {
+            REQUIRE(sp::traits::Printable<int>::value);
+            REQUIRE(sp::traits::Printable<float>::value);
+            REQUIRE(sp::traits::Printable<UserDefined>::value);
+            REQUIRE(sp::traits::Printable<std::string>::value);
+
+            REQUIRE(sp::traits::Printable<const int &>::value);
+            REQUIRE(sp::traits::Printable<const float &>::value);
+            REQUIRE(sp::traits::Printable<const UserDefined &>::value);
+            REQUIRE(sp::traits::Printable<const std::string &>::value);
+
+            REQUIRE_FALSE(sp::traits::Printable<NotPrintable>::value);
+            REQUIRE_FALSE(sp::traits::Printable<std::ostream>::value);
+            REQUIRE_FALSE(sp::traits::Printable<const NotPrintable &>::value);
+            REQUIRE_FALSE(sp::traits::Printable<const std::ostream &>::value);
+        }
+    }
+
+
     SECTION("Ansi Stream construction")
     {
         sp::AnsiStream original{stdout};
@@ -39,48 +113,22 @@ TEST_CASE("Ansi Stream on connex classes")
         // Child streams
         auto ss1 = on.makeStringStream();
         auto ss2 = off.makeStringStream();
-        
+
         std::stringstream expectedOn{};
-        expectedOn << sp::red << "hello"; 
+        expectedOn << sp::red << "hello";
         std::stringstream expectedOff{};
-        expectedOff << "world"; 
-        
+        expectedOff << "world";
+
         ss1 << sp::red << "hello";
         ss2 << "world";
         std::swap(ss1, ss2);
-        
+
         // note that they also use the .stream() or operator-> to access the
         // underlying stream
         REQUIRE(ss2->str() == expectedOn.str());
         REQUIRE(ss1->str() == expectedOff.str());
     }
-    
-    SECTION("Ansi Sequence Detection")
-    {
-        REQUIRE(sp::traits::isAnsiSequence<sp::AnsiSequence>::value);
-        REQUIRE(sp::traits::isAnsiSequence<sp::FgColor>::value);
-        REQUIRE(sp::traits::isAnsiSequence<sp::BgColor>::value);
-        REQUIRE(sp::traits::isAnsiSequence<sp::AnsiStyle>::value);
-        REQUIRE(sp::traits::isAnsiSequence<sp::RgbFgColor>::value);
 
-        REQUIRE(sp::traits::isAnsiSequence<const sp::AnsiSequence &>::value);
-        REQUIRE(sp::traits::isAnsiSequence<const sp::FgColor &>::value);
-        REQUIRE(sp::traits::isAnsiSequence<const sp::BgColor &>::value);
-        REQUIRE(sp::traits::isAnsiSequence<const sp::AnsiStyle &>::value);
-
-        REQUIRE(sp::traits::isAnsiSequence<volatile sp::AnsiSequence &&>::value);
-        REQUIRE(sp::traits::isAnsiSequence<volatile sp::FgColor &&>::value);
-        REQUIRE(sp::traits::isAnsiSequence<volatile sp::BgColor &&>::value);
-        REQUIRE(sp::traits::isAnsiSequence<volatile sp::AnsiStyle &&>::value);
-
-        REQUIRE(!sp::traits::isAnsiSequence<int>::value);
-        REQUIRE(!sp::traits::isAnsiSequence<const char *>::value);
-        REQUIRE(!sp::traits::isAnsiSequence<unsigned char &>::value);
-        REQUIRE(!sp::traits::isAnsiSequence<float>::value);
-        REQUIRE(!sp::traits::isAnsiSequence<volatile std::string>::value);
-        REQUIRE(!sp::traits::isAnsiSequence<void>::value);
-        REQUIRE(!sp::traits::isAnsiSequence<void *>::value);
-    }
 
     SECTION("Class Interface")
     {

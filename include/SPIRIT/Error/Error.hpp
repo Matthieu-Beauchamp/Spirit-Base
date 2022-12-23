@@ -26,7 +26,7 @@
 #define SPIRIT_ENGINE_ERROR_HPP
 
 #include "SPIRIT/Logging/Logging.hpp"
-#include "boost/stacktrace.hpp"
+
 #include <exception>
 
 
@@ -61,14 +61,12 @@ namespace sp
 ////////////////////////////////////////////////////////////
 class SPIRIT_API SpiritError : public std::exception
 {
-    typedef boost::stacktrace::stacktrace Stacktrace;
-    typedef boost::stacktrace::frame Frame;
-
 public:
+
     template <class... Args>
     SpiritError(Args &&... args) : SpiritError{}
     {
-        explanation += std::string{"\nwhat(): "}
+        explanation += std::string{"message from thrower: "}
                        + sp::IO::format(std::forward<Args>(args)...);
     }
 
@@ -78,41 +76,10 @@ public:
 //      so we should be able to enable stacktraces for windows too
 // this would imply detecting with which lib to link boost
 #if !SPIRIT_USE_STACKTRACE
-
     SpiritError() = default;
-
 #else
-
-    SpiritError()
-        : explanation{std::string{"Stacktrace:\n"}
-                      + stringifyStacktrace(Stacktrace{})}
-    {
-    }
-
-private:
-    static std::string
-    stringifyStacktrace(const Stacktrace & st)
-    {
-        std::stringstream str;
-
-        // print deepest at bottom
-        sp::Int32 i = 0;
-        for (auto it = st.rbegin(); it != st.rend(); ++it)
-        {
-            const auto & bt = *it;
-
-            if (bt.name().substr(0, 16) == "sp::Error::Error")
-                break;
-
-            str << i++ << ": " << bt.name() << " at ";
-            str << bt.source_file() << ":" << bt.source_line() << "\n";
-        }
-
-        return str.str();
-    }
-
-public:
-
+    // Creates a stacktrace on construction, prepended to this->explanation
+    SpiritError();
 #endif
 
     const char *
@@ -130,6 +97,7 @@ public:
 
 
 private:
+
     std::string explanation;
 };
 

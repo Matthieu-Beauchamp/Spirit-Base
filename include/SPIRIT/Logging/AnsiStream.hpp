@@ -26,24 +26,178 @@
 #ifndef SPIRIT_ENGINE_COLOREDSTREAM_HPP
 #define SPIRIT_ENGINE_COLOREDSTREAM_HPP
 
+#include "AnsiSequence.hpp"
 #include "SPIRIT/Concepts/Concepts.hpp"
 #include "SPIRIT/config.hpp"
-#include "details/AnsiStreamWrapper.hpp"
 #include "details/FileBuf.hpp"
 
-#include <iostream>
 #include <memory>
-#include <variant>
+#include <sstream>
 
 namespace sp
 {
 
+template <class StreamType>
+class NoRedirect : public StreamType
+{
+public:
+
+    typedef typename StreamType::char_type char_type;
+    typedef typename StreamType::int_type int_type;
+    typedef typename StreamType::pos_type pos_type;
+    typedef typename StreamType::off_type off_type;
+    typedef typename StreamType::traits_type traits_type;
+
+    using StreamType::StreamType;
+
+private:
+    using StreamType::rdbuf;
+};
+
+////////////////////////////////////////////////////////////
+/// It is necessary that we do not inherit from ostream
+/// since it causes ambiguous overload resolutions for operator<<.
+/// Furthermore, since our AnsiSequences rely on being detected by
+/// a stream which knows whether or not it supports them, they always output when
+/// their overloaded operator<< is called.
+/// This means that when the inherited operator<< is called, an ostream& is
+/// returned and every subsequent AnsiSequence is passed without regards to the ansiStream.
+////////////////////////////////////////////////////////////
+
+
+// Usage is intended to create stringstreams which will behave according to
+//  an AnsiStream's escape sequences support.
+// ie AnsiStream::makeStream<std::stringstream>(std::stringstream{}) -> AnsiStreamWrapper
+template <class StreamType> //,
+                            //   std::enable_if_t<sp::traits::isStream<StreamType>::value, bool> = true>
+class AnsiStreamWrapper
+{
+    typedef StreamType & (*Manipulator)(StreamType &);
+    typedef NoRedirect<StreamType> InnerStream;
+
+public:
+
+    typedef typename StreamType::char_type char_type;
+    typedef typename StreamType::int_type int_type;
+    typedef typename StreamType::pos_type pos_type;
+    typedef typename StreamType::off_type off_type;
+    typedef typename StreamType::traits_type traits_type;
+
+    AnsiStreamWrapper(InnerStream && inner, bool enableAnsi = false)
+        : inner{inner}, areSequencesEnabled{enableAnsi}
+    {
+    }
+
+    template <class... Args>
+    AnsiStreamWrapper(bool enableAnsi, Args &&... args)
+        : inner{std::forward<Args>(args)...}, areSequencesEnabled{enableAnsi}
+    {
+    }
+
+
+    ~AnsiStreamWrapper() = default;
+
+    // TODO: Only if StreamType is movable, can't use enable if...
+    // AnsiStreamWrapper(AnsiStreamWrapper && other) { *this = std::move(other); }
+    // AnsiStreamWrapper &
+    // operator=(AnsiStreamWrapper && other)
+    // {
+    //     std::swap(
+    //         static_cast<StreamType &>(inner),
+    //         static_cast<StreamType &>(other.inner)
+    //     );
+    //     areSequencesEnabled = other.areSequencesEnabled;
+    //     return *this;
+    // }
+
+    // Allows access to stream specific behavior,
+    // cannot prevent users from changing the streambuf...
+    InnerStream &
+    stream()
+    {
+        return inner;
+    }
+
+    const InnerStream &
+    stream() const
+    {
+        return inner;
+    }
+
+    InnerStream *
+    operator->()
+    {
+        return std::addressof(inner);
+    }
+
+    bool
+    isAnsiEnabled() const
+    {
+        return areSequencesEnabled;
+    }
+
+    void
+    enableAnsi(bool on = true)
+    {
+        areSequencesEnabled = on;
+    }
+
+    template <class T, std::enable_if_t<sp::traits::isAnsiSequence<T>::value, bool> = true>
+    friend AnsiStreamWrapper &
+    operator<<(AnsiStreamWrapper & stream, T && seq)
+    {
+        if (stream.areSequencesEnabled)
+            stream.stream() << seq;
+
+        return stream;
+    }
+
+    template <class T, std::enable_if_t<!sp::traits::isAnsiSequence<T>::value, bool> = true>
+    friend AnsiStreamWrapper &
+    operator<<(AnsiStreamWrapper & stream, T && obj)
+    {
+        stream.stream() << obj;
+        return stream;
+    }
+
+    friend AnsiStreamWrapper &
+    operator<<(AnsiStreamWrapper & stream, Manipulator manip)
+    {
+        stream.stream() << manip;
+        return stream;
+    }
+
+private:
+
+    bool areSequencesEnabled;
+
+    // We don't use a reference since these may go bad.
+    // Also this is intended as a new stream class, not one which
+    // modifies to behavior of an existing stream object
+    InnerStream inner;
+};
+
+
+template <class StreamType, class... Args>
+auto
+makeAnsiAwareStream(bool ansiEnabled, Args &&... args)
+{
+    typedef sp::AnsiStreamWrapper<StreamType> WrappedStream;
+
+    return WrappedStream{ansiEnabled, std::forward<Args>(args)...};
+}
+
+
+bool
+supportsAnsi(FILE * file);
+
+
 // TODO: Provide a way to make it streams unbuffered (sync with stdio)
 // TODO: template<charType>
 // TODO: Input sequences..? https://en.wikipedia.org/wiki/ANSI_escape_code#Terminal_input_sequences
-class SPIRIT_API AnsiStream : public sp::details::AnsiStreamWrapper<std::ostream>
+class SPIRIT_API AnsiStream : public sp::AnsiStreamWrapper<std::ostream>
 {
-    typedef sp::details::AnsiStreamWrapper<std::ostream> Wrapper;
+    typedef sp::AnsiStreamWrapper<std::ostream> Wrapper;
     typedef std::ostream StreamType;
 
 public:
@@ -63,55 +217,37 @@ public:
     };
 
     AnsiStream(FILE * file, sequenceMode mode = automatic)
-        : fileBuf{new sp::details::OutFileBuf{file}}
+        : Wrapper{false, std::addressof(fileBuf)}, fileBuf{file}
     {
-        this->inner = std::move(
-            std::make_unique<sp::details::NoRedirect<StreamType>>(fileBuf.get())
-        );
         changeSequenceMode(mode);
     }
 
-    // template <class Stream>
-    // AnsiStream(Stream && os, sequenceMode mode)
-    //     : Wrapper{std::forward<Stream>(os)}
+    // See AnsiStreamWrapper
+    // AnsiStream(AnsiStream && other, sequenceMode mode = automatic)
+    //     : Wrapper{static_cast<Wrapper &&>(other)}, fileBuf{other.file()}
     // {
-    //     static_assert(std::is_base_of<std::ostream, Stream>::value,
-    //                   "Using template to avoid duplicating for different "
-    //                   "references type");
-
     //     changeSequenceMode(mode);
     // }
 
-    AnsiStream(AnsiStream && other, sequenceMode mode = automatic)
-    {
-        std::swap(inner, other.inner);
-        std::swap(fileBuf, other.fileBuf);
-        changeSequenceMode(mode);
-    }
-
     ~AnsiStream() = default;
 
-    FILE *
+    [[nodiscard]] FILE *
     file() const
     {
-        return fileBuf->file();
+        return fileBuf.file();
     }
 
     template <class ChildStreamType, class... Args>
-    [[nodiscard]] sp::details::AnsiStreamWrapper<ChildStreamType>
+    [[nodiscard]] auto
     makeAnsiChildStream(Args &&... args) const
     {
-        typedef sp::details::AnsiStreamWrapper<ChildStreamType> WrappedStream;
-        typedef sp::details::NoRedirect<ChildStreamType> InnerStream;
-
-        WrappedStream stream{areSequencesEnabled};
-        stream.inner = std::move(
-            std::make_unique<InnerStream>(std::forward<Args>(args)...)
+        return makeAnsiAwareStream<ChildStreamType>(
+            isAnsiEnabled(),
+            std::forward<Args>(args)...
         );
-        return std::move(stream);
     }
 
-    [[nodiscard]] sp::details::AnsiStreamWrapper<std::stringstream>
+    [[nodiscard]] auto
     makeStringStream() const
     {
         return makeAnsiChildStream<std::stringstream>();
@@ -119,25 +255,18 @@ public:
 
 private:
 
-    // using std::ostream::rdbuf;
-
-
-    // forbid redirecting output
-    // TODO: Or force the user to specify a new color mode (otherwise it's very bug prone)
-    std::unique_ptr<sp::details::OutFileBuf> fileBuf{nullptr};
+    sp::details::OutFileBuf fileBuf;
 
     void
     changeSequenceMode(sequenceMode mode)
     {
-        areSequencesEnabled = checkSequenceSupport(mode);
+        switch (mode)
+        {
+        case always: enableAnsi(true); return;
+        case never: enableAnsi(false); return;
+        case automatic: enableAnsi(supportsAnsi(fileBuf.file())); return;
+        }
     }
-
-
-    bool
-    checkSequenceSupport(sequenceMode mode);
-
-    bool
-    enableVirtualTerminal() const;
 };
 
 extern SPIRIT_API sp::AnsiStream ansiOut;

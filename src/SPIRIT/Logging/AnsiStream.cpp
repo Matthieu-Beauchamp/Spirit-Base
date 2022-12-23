@@ -37,46 +37,15 @@ namespace sp
 sp::AnsiStream ansiOut{stdout};
 sp::AnsiStream ansiErr{stderr};
 
-// For Windows https://learn.microsoft.com/en-us/windows/console/console-virtual-terminal-sequences
 
-// some info and referenes https://gist.github.com/fnky/458719343aabd01cfb17a3a4f7296797
-
-// https://github.com/agauniyal/rang is the original reference,
-// His terminal checkin is better than spdlog's, we should use it instead.
-
-// TODO: spdlog does not check for Windows virtual terminal emulation.
-bool
-sp::AnsiStream::checkSequenceSupport(sequenceMode mode)
-{
-    switch (mode)
-    {
-    case always: return true;
-    case never: return false;
-    case automatic:
-    {
-        if (this->fileBuf.get() == nullptr)
-        {
-            // Cannot determine if we should color // TODO: Proper error
-            throw std::exception{};
-        }
-
-        return spdlog::details::os::in_terminal(fileBuf->file())
-               && spdlog::details::os::is_color_terminal()
-               && enableVirtualTerminal();
-    }
-    }
-
-    return false;
-}
-
-
+// TODO: Does not check for given file!
 // https://learn.microsoft.com/en-us/windows/console/console-virtual-terminal-sequences#samples
 // incomplete, we if ostream is std::cerr or std::clog, theyre not the same as stdout
 //
 // TODO: SEE: https://github.com/agauniyal/rang
 //  better checking (ie msys, pipes, ...) and the native windows API usage
 bool
-sp::AnsiStream::enableVirtualTerminal() const
+enableVirtualTerminal(FILE * file)
 {
 #if defined(SPIRIT_OS_WINDOWS)
     // Set output mode to handle virtual terminal sequences
@@ -106,5 +75,21 @@ sp::AnsiStream::enableVirtualTerminal() const
     return true;
 }
 
+
+// For Windows https://learn.microsoft.com/en-us/windows/console/console-virtual-terminal-sequences
+
+// some info and referenes https://gist.github.com/fnky/458719343aabd01cfb17a3a4f7296797
+
+// https://github.com/agauniyal/rang is the original reference,
+// His terminal checkin is better than spdlog's, we should use it instead.
+
+// TODO: spdlog does not check for Windows virtual terminal emulation.
+bool
+supportsAnsi(FILE * file)
+{
+    return spdlog::details::os::in_terminal(file)
+           && spdlog::details::os::is_color_terminal()
+           && enableVirtualTerminal(file);
+}
 
 } // namespace sp

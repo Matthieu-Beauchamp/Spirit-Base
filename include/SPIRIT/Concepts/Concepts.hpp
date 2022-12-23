@@ -41,6 +41,16 @@ namespace sp
 namespace traits
 {
 
+// Why is this not available with std::void_t in gcc with c++20?
+template <typename... Ts>
+struct make_void
+{
+    typedef void type;
+};
+
+template <typename... Ts>
+using void_t = typename make_void<Ts...>::type;
+
 // TODO: Macro magic here?
 // template<class T, class = void>
 // struct ValidExpression : std::false_type
@@ -62,8 +72,6 @@ namespace traits
 /// Otherwise, defines Printable<T>::value as false
 ///
 ////////////////////////////////////////////////////////////
-
-// Probably does not work
 template <class T, class = void>
 struct Printable : public std::false_type
 {
@@ -73,22 +81,32 @@ struct Printable : public std::false_type
 template <class T>
 struct Printable<
     T,
-    std::enable_if_t<true, decltype(std::declval<std::ostream &>() << std::declval<T>())>>
+    void_t<decltype(std::declval<std::ostream &>() << std::declval<T>())>>
     : public std::true_type
 {
 };
 
 
-// Does not work
+////////////////////////////////////////////////////////////
+/// \ingroup Concepts
+/// \brief Any object that can be used to do IO (<< or >> with const char *)
+/// 
+////////////////////////////////////////////////////////////
 template <class T, class = void>
 struct isStream : public std::false_type
 {
 };
 
+// out stream 
 template <class T>
-struct isStream<
-    T,
-    std::enable_if_t<std::is_base_of<std::basic_ios<typename T::char_type>, T>::value, bool>>
+struct isStream<T, void_t<decltype(std::declval<T &>() << std::declval<const char *>())>>
+    : public std::true_type
+{
+};
+
+// in stream 
+template <class T>
+struct isStream<T, void_t<decltype(std::declval<T &>() >> std::declval<const char *>())>>
     : public std::true_type
 {
 };

@@ -39,6 +39,7 @@ template <typename char_type>
 class FileBufBase : public std::basic_streambuf<char_type>
 {
 public:
+
     typedef typename std::basic_streambuf<char_type>::traits_type traits_type;
     typedef typename std::basic_streambuf<char_type>::int_type int_type;
     typedef typename std::basic_streambuf<char_type>::pos_type pos_type;
@@ -78,24 +79,19 @@ protected:
     //      then seekoff(1, beg) will move the cursor two bytes from the
     //      beginning of the FILE.
     pos_type
-    seekoff(off_type offset,
-            std::ios_base::seekdir basePos,
-            std::ios_base::openmode which
-            = std::ios_base::in | std::ios_base::out) override
+    seekoff(
+        off_type offset,
+        std::ios_base::seekdir basePos,
+        std::ios_base::openmode which = std::ios_base::in | std::ios_base::out
+    ) override
     {
         // values of enumeration are implementation defined
         int Cpos = SEEK_CUR;
         switch (basePos)
         {
-        case std::ios_base::beg:
-            Cpos = SEEK_SET;
-            break;
-        case std::ios_base::cur:
-            Cpos = SEEK_CUR;
-            break;
-        case std::ios_base::end:
-            Cpos = SEEK_END;
-            break;
+        case std::ios_base::beg: Cpos = SEEK_SET; break;
+        case std::ios_base::cur: Cpos = SEEK_CUR; break;
+        case std::ios_base::end: Cpos = SEEK_END; break;
         }
         fseek(targetFile, offset * sizeof(char_type), Cpos);
 
@@ -103,9 +99,10 @@ protected:
     }
 
     pos_type
-    seekpos(pos_type pos,
-            std::ios_base::openmode which
-            = std::ios_base::in | std::ios_base::out) override
+    seekpos(
+        pos_type pos,
+        std::ios_base::openmode which = std::ios_base::in | std::ios_base::out
+    ) override
     {
         return seekoff(pos, std::ios_base::beg, which);
     }
@@ -153,6 +150,7 @@ protected:
     }
 
 private:
+
     ////////////////////////////////////////////////////////////
     // Data
     ////////////////////////////////////////////////////////////
@@ -247,6 +245,7 @@ class FileBuf : public sp::details::FileBufBase<char_type>
     typedef sp::details::FileBufBase<char_type> Base;
 
 public:
+
     typedef
         typename sp::details::FileBufBase<char_type>::traits_type traits_type;
     typedef typename sp::details::FileBufBase<char_type>::int_type int_type;
@@ -272,6 +271,7 @@ public:
     ~FileBuf() override = default;
 
 protected:
+
     ////////////////////////////////////////////////////////////
     // Locales
     ////////////////////////////////////////////////////////////
@@ -286,10 +286,11 @@ protected:
     // TODO: Changing the buffer is not yet supported
 
     pos_type
-    seekoff(off_type offset,
-            std::ios_base::seekdir basePos,
-            std::ios_base::openmode which
-            = std::ios_base::in | std::ios_base::out) override
+    seekoff(
+        off_type offset,
+        std::ios_base::seekdir basePos,
+        std::ios_base::openmode which = std::ios_base::in | std::ios_base::out
+    ) override
     {
         pos_type newPos = Base::seekoff(offset, basePos, which);
         io.assignPos(newPos, which);
@@ -338,9 +339,11 @@ protected:
             size_t nRead = Base::read(io.in.buf.begin(), io.in.pos, bufSize);
             io.in.pos += nRead;
 
-            this->setg(io.in.buf.begin(),
-                       io.in.buf.begin(),
-                       io.in.buf.begin() + nRead);
+            this->setg(
+                io.in.buf.begin(),
+                io.in.buf.begin(),
+                io.in.buf.begin() + nRead
+            );
 
             return nRead == 0 ? traits_type::eof()
                               : traits_type::to_int_type(*this->gptr());
@@ -401,8 +404,10 @@ protected:
                 return traits_type::eof(); // failure
             }
 
-            this->setp(io.out.buf.begin(),
-                       io.out.buf.end()); // resets current pointer
+            this->setp(
+                io.out.buf.begin(),
+                io.out.buf.end()
+            ); // resets current pointer
 
             // if (traits_type::not_eof(ch)) // FAILS ON '\0' !
             if (!traits_type::eq_int_type(ch, traits_type::eof()))
@@ -424,6 +429,7 @@ protected:
     // TODO: pbackfail
 
 private:
+
     sp::details::ioBuffers<mode, bufSize, char_type> io{};
 };
 
@@ -437,10 +443,9 @@ typedef sp::details::FileBuf<std::ios_base::out, bufSizeDefault, charTypeDefault
 typedef sp::details::FileBuf<std::ios_base::in, bufSizeDefault, charTypeDefault>
     InFileBuf;
 
-typedef sp::details::FileBuf<std::ios_base::in | std::ios_base::out,
-                             bufSizeDefault,
-                             charTypeDefault>
-    IOFileBuf;
+typedef sp::details::
+    FileBuf<std::ios_base::in | std::ios_base::out, bufSizeDefault, charTypeDefault>
+        IOFileBuf;
 
 typedef sp::details::FileBuf<std::ios_base::out, bufSizeDefault, wCharTypeDefault>
     wOutFileBuf;
@@ -448,10 +453,9 @@ typedef sp::details::FileBuf<std::ios_base::out, bufSizeDefault, wCharTypeDefaul
 typedef sp::details::FileBuf<std::ios_base::in, bufSizeDefault, wCharTypeDefault>
     wInFileBuf;
 
-typedef sp::details::FileBuf<std::ios_base::in | std::ios_base::out,
-                             bufSizeDefault,
-                             wCharTypeDefault>
-    wIOFileBuf;
+typedef sp::details::
+    FileBuf<std::ios_base::in | std::ios_base::out, bufSizeDefault, wCharTypeDefault>
+        wIOFileBuf;
 
 
 } // namespace details

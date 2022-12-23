@@ -28,6 +28,7 @@
 
 #include "SPIRIT/config.hpp"
 
+#include <iostream>
 #include <string>
 #include <type_traits>
 
@@ -57,13 +58,18 @@ namespace sp
 ////////////////////////////////////////////////////////////
 class SPIRIT_API AnsiSequence
 {
-protected:
+public:
 
-    static constexpr const char * CSI = "\u001b[";
-    static constexpr const char * end = "m";
+    static constexpr const char ESC   = '\x1b';
+    static constexpr const char * CSI = "\x1b[";
+    static constexpr const char end   = 'm';
+
+protected:
 
     // codes are actually in the [ 0x20 , 0x7E ] range,
     // we use int for proper output
+
+    // Note that these are defined for color codes
     static std::ostream &
     putCode(std::ostream & os, sp::Int32 code);
 
@@ -80,6 +86,11 @@ protected:
 namespace traits
 {
 
+////////////////////////////////////////////////////////////
+/// \ingroup Concepts
+/// \brief All objects that derive from AnsiSequence
+///
+////////////////////////////////////////////////////////////
 template <class T>
 struct isAnsiSequence
     : public std::integral_constant<
@@ -327,6 +338,177 @@ modify(
     bool resetAfter = true
 );
 
+
+////////////////////////////////////////////////////////////
+// Generic Sequences
+////////////////////////////////////////////////////////////
+
+namespace details
+{
+template <char code>
+class AsciiCode : AnsiSequence
+{
+public:
+
+    friend std::ostream &
+    operator<<(std::ostream & os, AsciiCode c)
+    {
+        return os << code;
+    };
+};
+} // namespace details
+
+class Bell : public details::AsciiCode<'\a'>
+{
+};
+
+class Backspace : public details::AsciiCode<'\b'>
+{
+};
+
+// Useful for overwriting lines (such as / - \ | loops in loaders or progress
+// bars), ex: ostream << sp::EraseLine << sp::CarriageReturn << "Updated Text";
+class CarriageRet : public details::AsciiCode<'\r'>
+{
+};
+
+////////////////////////////////////////////////////////////
+// Cursor movement
+////////////////////////////////////////////////////////////
+
+// absolute positionning (1, 1) is the default, topleft corner
+class CursorMoveAbs : AnsiSequence
+{
+public:
+
+    constexpr CursorMoveAbs(int line = 1, int column = 1)
+        : line{line}, column{column}
+    {
+    }
+
+    friend std::ostream &
+    operator<<(std::ostream & os, CursorMoveAbs c)
+    {
+        return os << c.CSI << c.line << ";" << c.column << "H";
+    };
+
+private:
+
+    int line;
+    int column;
+};
+
+namespace details
+{
+
+template <char symbol>
+class CursorRelMove : AnsiSequence
+{
+public:
+
+    constexpr CursorRelMove(int n) : n{n} {}
+
+    friend std::ostream &
+    operator<<(std::ostream & os, CursorRelMove c)
+    {
+        return os << c.CSI << c.n << symbol;
+    };
+
+private:
+
+    int n;
+};
+} // namespace details
+
+class CursorUp : public details::CursorRelMove<'A'>
+{
+public:
+
+    constexpr CursorUp(int nLines = 1) : CursorRelMove{nLines} {}
+};
+
+class CursorDown : public details::CursorRelMove<'B'>
+{
+public:
+
+    constexpr CursorDown(int nLines = 1) : CursorRelMove{nLines} {}
+};
+
+class CursorRight : public details::CursorRelMove<'C'>
+{
+public:
+
+    constexpr CursorRight(int nColumns = 1) : CursorRelMove{nColumns} {}
+};
+
+class CursorLeft : public details::CursorRelMove<'D'>
+{
+public:
+
+    constexpr CursorLeft(int nColumns = 1) : CursorRelMove{nColumns} {}
+};
+
+class CursorToColumn : public details::CursorRelMove<'G'>
+{
+public:
+
+    constexpr CursorToColumn(int col = 1) : CursorRelMove{col} {}
+};
+
+
+////////////////////////////////////////////////////////////
+// Erasing
+////////////////////////////////////////////////////////////
+
+namespace details
+{
+
+template <int num, char symbol>
+class Erase : AnsiSequence
+{
+public:
+
+    constexpr Erase() {}
+
+    friend std::ostream &
+    operator<<(std::ostream & os, Erase c)
+    {
+        return os << c.CSI << num << symbol;
+    };
+
+private:
+
+    int n;
+};
+} // namespace details
+
+class EraseScreen : public details::Erase<2, 'J'>
+{
+public:
+
+    constexpr EraseScreen() {}
+};
+
+class EraseCursorToEndLine : public details::Erase<0, 'K'>
+{
+public:
+
+    constexpr EraseCursorToEndLine() {}
+};
+
+class EraseStartLineToCursor : public details::Erase<1, 'K'>
+{
+public:
+
+    constexpr EraseStartLineToCursor() {}
+};
+
+class EraseLine : public details::Erase<2, 'K'>
+{
+public:
+
+    constexpr EraseLine() {}
+};
 
 } // namespace sp
 

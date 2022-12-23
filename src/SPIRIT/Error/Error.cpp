@@ -23,30 +23,39 @@
 ////////////////////////////////////////////////////////////
 
 
-#ifndef SPIRIT_CORE_HPP
-#define SPIRIT_CORE_HPP
+#include "SPIRIT/Error/Error.hpp"
+
+// #include <stacktrace> // in C++23
+#include "boost/stacktrace.hpp"
 
 
-////////////////////////////////////////////////////////////
-/// \defgroup Base Base
-///
-/// \brief Base module of the Spirit library
-/// 
-/// The Base module contains the basic faciliities on which 
-/// Spirit relies across all modules.
-///
-/// For users, only the Configuration (and perhaps Logging) module 
-/// is relevant here.
-/// 
-////////////////////////////////////////////////////////////
+namespace sp
+{
+
+typedef boost::stacktrace::stacktrace Stacktrace;
+typedef boost::stacktrace::frame Frame;
+
+std::string
+stringifyStacktrace(const Stacktrace & st)
+{
+    ///////////////////////////////////////////////////////
+    // Some implementations will always return empty strings here...
+    // so making our own sucks
+    // for (const auto & bt : st)
+    // {
+    //     std::cout << bt.name();
+    //     std::cout << bt.source_file();
+    //     std::cout << bt.source_line();
+    // }
+
+    return boost::stacktrace::to_string(st);
+}
+
+SpiritError::SpiritError()
+    : explanation{
+        std::string{"Stacktrace:\n"} + stringifyStacktrace(Stacktrace{}) + "\n"}
+{
+}
 
 
-#include "config.hpp"
-
-#include "Logging/Logging.hpp"
-#include "Logging/AnsiStream.hpp"
-
-#include "Error/Error.hpp"
-
-
-#endif // SPIRIT_CORE_HPP
+} // namespace sp

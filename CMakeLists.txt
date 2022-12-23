@@ -75,38 +75,31 @@ endif()
 ############################################################
 spirit_update_submodules(${SPIRIT_BASE_ROOT})
 
-
 if (${CMAKE_SYSTEM_NAME} MATCHES "Windows")
     if(${MSVC})
-        spirit_add_compile_flags("-DNOMINMAX") # Removes min and max macros # TODO: I dont think it caused problems in base
-        spirit_add_compile_flags("/EHsc") # Unwinding semantics disabled otherwise (Can't compile Error class)
+        add_compile_definitions("-DNOMINMAX") # Removes min and max macros # TODO: I dont think it caused problems in base
+        add_compile_definitions("/EHsc") # Unwinding semantics disabled otherwise (Can't compile Error class)
     endif()
 endif()
 
+add_library(spirit-base "")
 # Dependencies #############################################
 include(build_extLibs)
 
-build_spdlog(${SPIRIT_BASE_ROOT}/ext_libs/spdlog         SPDLOG_LIB SPDLOG_INCLUDE)
-build_Boost(${SPIRIT_BASE_ROOT}/ext_libs/boost           BOOST_LIB BOOST_INCLUDE BOOST_LINK)
+build_spdlog(${SPIRIT_BASE_ROOT}/ext_libs/spdlog spirit-base)
+build_Boost(${SPIRIT_BASE_ROOT}/ext_libs/boost spirit-base)
 
 # Build Spirit Base #############################################
-
-add_library(spirit-base "")
 
 # Only export when building the lib
 # Will this work when other modules will include / link to it?
 target_compile_definitions(spirit-base PRIVATE SPIRIT_EXPORT)
 
-target_include_directories(spirit-base PUBLIC ${SPDLOG_INCLUDE})
-
-target_include_directories(spirit-base PUBLIC  ${BOOST_INCLUDE})
-target_link_directories(spirit-base PRIVATE ${BOOST_LINK})
-
-target_link_libraries(spirit-base ${SPDLOG_LIB} ${BOOST_LIB})
 
 # TODO: Include headers as sources
 set(SPIRIT_BASE_COMPONENTS 
     Logging
+    Error
     Utils
 )
 foreach (COMPONENT ${SPIRIT_BASE_COMPONENTS})

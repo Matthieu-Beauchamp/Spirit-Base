@@ -46,7 +46,7 @@ format(const std::string & str, Args &&... args)
 }
 
 // ////////////////////////////////////////////////////////
-template <class T, std::enable_if_t<sp::traits::Printable<T>::value, bool> = true>
+template <class T, std::enable_if_t<sp::traits::Printable<T>::value, bool>>
 std::string
 format(const T & printable)
 {
