@@ -26,7 +26,7 @@
 #ifndef SPIRIT_MESSAGE_HPP
 #define SPIRIT_MESSAGE_HPP
 
-#include "spdlog/fmt/ostr.h"
+#include "Format.hpp"
 #include "spdlog/logger.h"
 
 #include <experimental/source_location>
@@ -39,15 +39,6 @@ using LogLevel = spdlog::level::level_enum;
 namespace details
 {
 
-template <class... Args>
-using format_string_t = spdlog::format_string_t<Args...>;
-using string_view_t   = spdlog::string_view_t;
-
-
-// Tried to make it so we could detect if the strings passed to constructors
-// are constexpr (to use format_string_t), could not make it work while still
-// allowing dynamic strings. We will settle on string_view
-// We could make something like Message<"myVar = {}">(myVar), but its a bit ugly
 template <LogLevel lvl>
 class MessageBase
 {
@@ -55,31 +46,10 @@ class MessageBase
 
 public:
 
-    // Message() : Message{""} {}
-
-    // // Final Delegate for formatting
-    // template <class... Args>
-    // Message(string_view_t msg, Args &&... args )
-    //     : Message{fmt::vformat(msg, fmt::make_format_args(args...))}
-    // {
-    // }
-
-    // // T cannot be statically converted to format string (including string_view/wstring_view)
-    // template <
-    //     class T,
-    //     std::enable_if_t<!spdlog::is_convertible_to_any_format_string<T>::value, int> = 0>
-    // Message(const T & msg)
-    //     : Message{fmt::vformat("{}", fmt::make_format_args(msg))}
-    // {
-    // }
-
-
-    // Final constructor
     MessageBase(std::string && str, SourceLocation loc)
         : msg{std::move(str)}, loc{loc}
     {
     }
-
 
     template <LogLevel otherLevel>
     MessageBase(const MessageBase<otherLevel> & other)
@@ -143,6 +113,28 @@ private:
 };
 
 
+////////////////////////////////////////////////////////////
+/// \brief Allows constructing loggable message with source location
+///
+/// The location where the message is created will be kept,
+/// this includes the file, line and enclosing function name.
+///
+/// The arguments for construction can be anything from a string,
+/// an object with an operator<< overload with ostream to
+/// a format string with multiple format arguments:
+/// \code sp::Info{"{} != {}", 1, 2}; \endcode
+///
+/// See sp::format
+///
+/// The intended usage is to stream messages to a logger:
+/// \code
+/// sp::Logger << sp::Info{"Some meaningful information: {}", someClass};
+///
+/// // Ansi escape sequences are supported (see the Sinks):
+/// sp::Logger << sp::Error{"Operation failed: {}{} != {}{}",
+///                         sp::red, 1, 2, sp::reset};
+/// \endcode
+////////////////////////////////////////////////////////////
 template <LogLevel lvl, class... Args>
 class Message : public MessageBase<lvl>
 {
@@ -151,17 +143,14 @@ class Message : public MessageBase<lvl>
 
 public:
 
-    Message(SourceLocation loc = SourceLocation::current())
-        : Base{"", loc}
-    {
-    }
+    Message(SourceLocation loc = SourceLocation::current()) : Base{"", loc} {}
 
     Message(
-        string_view_t msg,
+        std::string_view msg,
         Args &&... args,
         SourceLocation loc = SourceLocation::current()
     )
-        : Base{fmt::vformat(msg, fmt::make_format_args(args...)), loc}
+        : Base{sp::format(msg, std::forward<Args>(args)...), loc}
     {
     }
 
@@ -170,7 +159,7 @@ public:
         class T,
         std::enable_if_t<!spdlog::is_convertible_to_any_format_string<T>::value, int> = 0>
     Message(const T & msg, SourceLocation loc = SourceLocation::current())
-        : Base{fmt::vformat("{}", fmt::make_format_args(msg)), loc}
+        : Base{sp::format("{}", msg), loc}
     {
     }
 };
@@ -180,7 +169,7 @@ public:
 // https://www.cppstories.com/2021/non-terminal-variadic-args/
 // https://en.cppreference.com/w/cpp/language/class_template_argument_deduction
 //
-// ex: 
+// ex:
 // using Source = std::experimental::source_location;
 // template <typename... Ts>
 // struct Log
@@ -196,9 +185,14 @@ public:
 // template <typename... Ts>
 // Log(Ts &&...) -> Log<Ts...>;
 //
-template <LogLevel lvl, class... Args>
-Message(string_view_t, Args &&...) -> Message<lvl, Args...>;
+template <LogLevel lvl>
+Message() -> Message<lvl>;
 
+template <LogLevel lvl, class T>
+Message(T &&) -> Message<lvl>;
+
+template <LogLevel lvl, class... Args>
+Message(std::string_view, Args &&...) -> Message<lvl, Args...>;
 
 } // namespace details
 

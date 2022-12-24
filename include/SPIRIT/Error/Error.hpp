@@ -25,8 +25,8 @@
 #ifndef SPIRIT_ENGINE_ERROR_HPP
 #define SPIRIT_ENGINE_ERROR_HPP
 
-#include "SPIRIT/Logging/Logging.hpp"
-
+#include "SPIRIT/config.hpp"
+#include "SPIRIT/Logging/Format.hpp"
 #include <exception>
 
 
@@ -67,14 +67,10 @@ public:
     SpiritError(Args &&... args) : SpiritError{}
     {
         explanation += std::string{"message from thrower: "}
-                       + sp::IO::format(std::forward<Args>(args)...);
+                       + sp::format(std::forward<Args>(args)...);
     }
 
 
-// No stack traces on windows
-// TODO: I think Mingw64 has the addr2line lib,
-//      so we should be able to enable stacktraces for windows too
-// this would imply detecting with which lib to link boost
 #if !SPIRIT_USE_STACKTRACE
     SpiritError() = default;
 #else

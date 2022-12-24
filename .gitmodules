@@ -7,3 +7,6 @@
 [submodule "test/Catch2"]
 	path = test/Catch2
 	url = https://github.com/catchorg/Catch2
+[submodule "docs/Spirit-Doxygen"]
+	path = docs/Spirit-Doxygen
+	url = https://github.com/Matthieu-Beauchamp/Spirit-Doxgen

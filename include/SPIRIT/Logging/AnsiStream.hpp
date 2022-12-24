@@ -26,7 +26,7 @@
 #ifndef SPIRIT_ENGINE_COLOREDSTREAM_HPP
 #define SPIRIT_ENGINE_COLOREDSTREAM_HPP
 
-#include "AnsiSequence.hpp"
+#include "AnsiEscape.hpp"
 #include "SPIRIT/Concepts/Concepts.hpp"
 #include "SPIRIT/config.hpp"
 #include "details/FileBuf.hpp"
@@ -61,7 +61,7 @@ private:
 /// a stream which knows whether or not it supports them, they always output when
 /// their overloaded operator<< is called.
 /// This means that when the inherited operator<< is called, an ostream& is
-/// returned and every subsequent AnsiSequence is passed without regards to the ansiStream.
+/// returned and every subsequent AnsiEscape is passed without regards to the ansiStream.
 ////////////////////////////////////////////////////////////
 
 
@@ -142,7 +142,7 @@ public:
         areSequencesEnabled = on;
     }
 
-    template <class T, std::enable_if_t<sp::traits::isAnsiSequence<T>::value, bool> = true>
+    template <class T, std::enable_if_t<sp::traits::isAnsiEscape<T>::value, bool> = true>
     friend AnsiStreamWrapper &
     operator<<(AnsiStreamWrapper & stream, T && seq)
     {
@@ -152,7 +152,7 @@ public:
         return stream;
     }
 
-    template <class T, std::enable_if_t<!sp::traits::isAnsiSequence<T>::value, bool> = true>
+    template <class T, std::enable_if_t<!sp::traits::isAnsiEscape<T>::value, bool> = true>
     friend AnsiStreamWrapper &
     operator<<(AnsiStreamWrapper & stream, T && obj)
     {

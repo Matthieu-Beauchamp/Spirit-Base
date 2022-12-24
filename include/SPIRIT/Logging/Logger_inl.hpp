@@ -100,13 +100,13 @@ StreamSink<Stream, Mutex>::sink_it_(const spdlog::details::log_msg & msg)
 
 
 // TODO: Does not account for generic sequences (ie cursor and erase)
-// only for color and style sequences, AnsiSequences need further refinement
+// only for TextStyle sequences, AnsiSequences need further refinement
 template <class Stream, class Mutex>
 void
 StreamSink<Stream, Mutex>::filterSequences(const char_type * start, size_t size)
 {
-    constexpr char_type seqBegin = static_cast<char_type>(sp::AnsiSequence::ESC);
-    constexpr char_type seqEnd = static_cast<char_type>(sp::AnsiSequence::end);
+    constexpr char_type seqBegin = static_cast<char_type>(TextStyle::ESC);
+    constexpr char_type seqEnd = static_cast<char_type>(TextStyle::end);
 
     const char_type * const last = start + size;
 
@@ -124,7 +124,7 @@ StreamSink<Stream, Mutex>::filterSequences(const char_type * start, size_t size)
 
         if (beg == last || beg > end)
             throw sp::SpiritError{
-                "Missing an AnsiSequence termination or "
+                "Missing an AnsiEscape termination or "
                 "unsupport sequence used in logging: {}",
                 start};
 

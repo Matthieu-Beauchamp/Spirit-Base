@@ -43,7 +43,6 @@
 
 #include "config.hpp"
 
-#include "Logging/Logging.hpp"
 #include "Logging/AnsiStream.hpp"
 
 #include "Error/Error.hpp"

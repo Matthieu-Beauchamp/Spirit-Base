@@ -10,7 +10,6 @@ struct UserDefined
     }
 };
 
-
 TEST_CASE("Messages")
 {
     SECTION("Compile time string output")
@@ -52,7 +51,7 @@ TEST_CASE("Messages")
 bool
 containsAnsiSequence(const std::string & str)
 {
-    return std::find(str.begin(), str.end(), sp::AnsiSequence::ESC) != str.end();
+    return std::find(str.begin(), str.end(), sp::AnsiEscape::ESC) != str.end();
 }
 
 TEST_CASE("StreamSinks")
@@ -123,14 +122,5 @@ TEST_CASE("File Sinks")
         }
     }
 
-    // Should that pattern formatters and integration with spdlog's api
-}
-
-
-TEST_CASE("Logger")
-{
-    SECTION("Construction")
-    {
-        // auto logger = spdlog::
-    }
+    // Should test that pattern formatters and integration with spdlog's api
 }

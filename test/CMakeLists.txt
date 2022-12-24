@@ -35,6 +35,7 @@ macro(addTest testName ...)
     catch_discover_tests(${testName})
 endmacro()
 
+addTest(AnsiEscape-test testAnsiEscape.cpp)
 
 addTest(fileBuf-test testFileBuf.cpp)
 addTest(ansiStream-test testAnsiStream.cpp)

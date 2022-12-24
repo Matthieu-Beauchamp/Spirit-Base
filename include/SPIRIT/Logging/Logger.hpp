@@ -27,7 +27,6 @@
 #define SPIRIT_LOGGER_HPP
 
 #include "AnsiStream.hpp"
-#include "Logging.hpp"
 #include "Message.hpp"
 #include "spdlog/details/null_mutex.h"
 #include "spdlog/pattern_formatter.h"
@@ -38,6 +37,10 @@
 
 namespace sp
 {
+
+////////////////////////////////////////////////////////////
+// Log message levels
+////////////////////////////////////////////////////////////
 
 template <class... Args>
 using Trace = details::Message<LogLevel::trace, Args...>;
@@ -59,16 +62,26 @@ using Critical = details::Message<LogLevel::critical, Args...>;
 
 // Off level..?
 
+////////////////////////////////////////////////////////////
+// wrapping spdlog
+////////////////////////////////////////////////////////////
 
-// TODO: Naming is not great below...
+using Logger = spdlog::logger;
 
 // TODO: Free functions for convenience...
 
-// set pattern reference: 
+
+
+
+
+
+// TODO: Naming is not great below...
+
+// set pattern reference:
 // https://github.com/gabime/spdlog/wiki/3.-Custom-formatting#customizing-format-using-set_pattern
 
 
-struct LevelColor : sp::AnsiSequence
+struct SPIRIT_API LevelColor : sp::AnsiEscape
 {
     constexpr LevelColor(
         sp::FgColor fg      = sp::defaultFg,
@@ -109,7 +122,7 @@ public:
     template <class... Args>
     StreamSink(
         bool enableAnsi,
-        std::unique_ptr<spdlog::formatter>&& formatter,
+        std::unique_ptr<spdlog::formatter> && formatter,
         Args &&... args
     );
 
@@ -157,12 +170,6 @@ template <class Stream>
 using StreamSink_mt = StreamSink<Stream, std::mutex>;
 
 
-// TODO: Sink creation methods (child)
-// Using AnsiStream as a Stream type here is weird,
-// NoRedirect<ostream> -> Wrapper -> AnsiStream -> NoRedirect<AnsiStream> -> Wrapper -> StreamSink -> FileSink
-// TODO: Use composition instead, this is nonsense
-// TODO: Chartype...
-
 // TODO: So repetitive with AnsiStream...
 template <class Mutex>
 class FileSink : public StreamSink<std::ostream, Mutex>
@@ -177,6 +184,7 @@ public:
     typedef typename BaseSink::off_type off_type;
     typedef typename BaseSink::traits_type traits_type;
 
+    // TODO: Remove the enum from class, it is repeated with the AnsiStream
     enum sequenceMode
     {
         always,
@@ -191,10 +199,11 @@ public:
 
     FileSink(
         FILE * file,
-        std::unique_ptr<spdlog::formatter>&& formatter,
+        std::unique_ptr<spdlog::formatter> && formatter,
         sequenceMode mode
     )
-        : BaseSink{false, std::move(formatter), std::addressof(fileBuf)}, fileBuf{file}
+        : BaseSink{false, std::move(formatter), std::addressof(fileBuf)},
+          fileBuf{file}
     {
         changeSequenceMode(mode);
     }

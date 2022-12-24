@@ -1,4 +1,3 @@
-#include "SPIRIT/Logging/AnsiSequence.hpp"
 #include "SPIRIT/Logging/AnsiStream.hpp"
 #include "catch2/catch_all.hpp"
 
@@ -27,35 +26,6 @@ TEST_CASE("Ansi Stream on connex classes")
 {
     SECTION("Concepts")
     {
-        SECTION("Ansi Sequence Detection")
-        {
-            REQUIRE(sp::traits::isAnsiSequence<sp::AnsiSequence>::value);
-            REQUIRE(sp::traits::isAnsiSequence<sp::FgColor>::value);
-            REQUIRE(sp::traits::isAnsiSequence<sp::BgColor>::value);
-            REQUIRE(sp::traits::isAnsiSequence<sp::AnsiStyle>::value);
-            REQUIRE(sp::traits::isAnsiSequence<sp::RgbFgColor>::value);
-
-            REQUIRE(sp::traits::isAnsiSequence<const sp::AnsiSequence &>::value);
-            REQUIRE(sp::traits::isAnsiSequence<const sp::FgColor &>::value);
-            REQUIRE(sp::traits::isAnsiSequence<const sp::BgColor &>::value);
-            REQUIRE(sp::traits::isAnsiSequence<const sp::AnsiStyle &>::value);
-
-            REQUIRE(sp::traits::isAnsiSequence<volatile sp::AnsiSequence &&>::value
-            );
-            REQUIRE(sp::traits::isAnsiSequence<volatile sp::FgColor &&>::value);
-            REQUIRE(sp::traits::isAnsiSequence<volatile sp::BgColor &&>::value);
-            REQUIRE(sp::traits::isAnsiSequence<volatile sp::AnsiStyle &&>::value);
-
-            REQUIRE_FALSE(sp::traits::isAnsiSequence<int>::value);
-            REQUIRE_FALSE(sp::traits::isAnsiSequence<const char *>::value);
-            REQUIRE_FALSE(sp::traits::isAnsiSequence<unsigned char &>::value);
-            REQUIRE_FALSE(sp::traits::isAnsiSequence<float>::value);
-            REQUIRE_FALSE(sp::traits::isAnsiSequence<volatile std::string>::value
-            );
-            REQUIRE_FALSE(sp::traits::isAnsiSequence<void>::value);
-            REQUIRE_FALSE(sp::traits::isAnsiSequence<void *>::value);
-        }
-
         SECTION("isStream")
         {
             REQUIRE(sp::traits::isStream<sp::AnsiStream>::value);
@@ -138,7 +108,7 @@ TEST_CASE("Ansi Stream on connex classes")
         auto childStream     = out.makeStringStream();
 
         // AnsiStream can create stream which will enable/disable
-        // AnsiSequence according to the AnsiStream's status
+        // AnsiEscape according to the AnsiStream's status
         // (ie is in terminal and colors are supported)
         REQUIRE(childStream.isAnsiEnabled() == allowsSequences);
 

@@ -42,6 +42,11 @@ spirit_define_option(
         "Select if tests should be built"
 )
 
+spirit_define_option(
+        SPIRIT_BUILD_DOCS
+        TRUE BOOL
+        "Select if docs should be built"
+)
 
 ############################################################
 # Paths
@@ -117,3 +122,6 @@ endif ()
 add_subdirectory("${SPIRIT_BASE_ROOT}/examples/")
 
 
+if (SPIRIT_BUILD_DOCS)
+    add_subdirectory(./docs)
+endif ()

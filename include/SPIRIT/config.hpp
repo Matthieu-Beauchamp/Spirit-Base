@@ -56,21 +56,21 @@
 // this is because compiler specific macros are not very reliable,
 // msys/gcc would define Linux as the platform.
 #if defined(SPIRIT_OS_WINDOWS)
-#if defined(SPIRIT_EXPORT)
-#define SPIRIT_API __declspec(dllexport)
-#else
-#define SPIRIT_API __declspec(dllimport)
-#endif
+#    if defined(SPIRIT_EXPORT)
+#        define SPIRIT_API __declspec(dllexport)
+#    else
+#        define SPIRIT_API __declspec(dllimport)
+#    endif
 
 #elif defined(SPIRIT_OS_LINUX)
 
 #elif defined(SPIRIT_OS_MACOSX)
 
 #else
-#error "Unrecognized OS"
+#    error "Unrecognized OS"
 #endif
 
-#define SPIRIT_TRUE 1
+#define SPIRIT_TRUE  1
 #define SPIRIT_FALSE 0
 
 ////////////////////////////////////////////////////////////
@@ -84,7 +84,7 @@
 /// (or just for release builds)
 ////////////////////////////////////////////////////////////
 #ifndef SPIRIT_USE_ERRORS
-#define SPIRIT_USE_ERRORS SPIRIT_TRUE
+#    define SPIRIT_USE_ERRORS SPIRIT_TRUE
 #endif
 
 ////////////////////////////////////////////////////////////
@@ -97,7 +97,7 @@
 /// Disable by defining SPIRIT_USE_STACKTRACE to SPIRIT_FALSE
 ////////////////////////////////////////////////////////////
 #ifndef SPIRIT_USE_STACKTRACE
-#define SPIRIT_USE_STACKTRACE SPIRIT_TRUE
+#    define SPIRIT_USE_STACKTRACE SPIRIT_TRUE
 #endif
 
 ////////////////////////////////////////////////////////////
@@ -110,17 +110,18 @@
 /// define SPIRIT_VERBOSE to SPIRIT_TRUE to log everything
 ////////////////////////////////////////////////////////////
 #ifndef SPIRIT_VERBOSE
-#define SPIRIT_VERBOSE SPIRIT_FALSE
+#    define SPIRIT_VERBOSE SPIRIT_FALSE
 #endif
 
 ////////////////////////////////////////////////////////////
 // Define a portable debug macro
 ////////////////////////////////////////////////////////////
 #if !defined(NDEBUG)
-#define SPIRIT_DEBUG
+#    define SPIRIT_DEBUG
 #endif
 
-namespace sp {
+namespace sp
+{
 
 ////////////////////////////////////////////////////////////
 // Portable fixed-size types into Spirit
