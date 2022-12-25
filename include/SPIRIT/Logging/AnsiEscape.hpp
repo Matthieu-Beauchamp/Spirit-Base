@@ -30,12 +30,32 @@
 #include "details/AnsiEscapeImpl.hpp"
 
 #include <iostream>
-#include <string>
+#include <tuple>
 #include <type_traits>
 
 namespace sp
 {
 
+
+////////////////////////////////////////////////////////////
+// Aggregate / combined escapes
+////////////////////////////////////////////////////////////
+
+template <class... Args>
+class Escapes //: //sp::traits::EscapeType_t<Args...>, public std::tuple<Args...>
+{
+public:
+
+    Escapes(Args &&... args) : std::tuple<Args...>{std::forward<Args>(args)...}
+    {
+    }
+
+    friend std::ostream &
+    operator<<(std::ostream & os, const Escapes & e)
+    {
+        return ((os << std::get<Args>(e)), ...);
+    }
+};
 
 
 ////////////////////////////////////////////////////////////
@@ -120,18 +140,18 @@ SPIRIT_API typedef Gradient<details::ansiColorTarget::background> BgGradient;
 // Style
 ////////////////////////////////////////////////////////////
 
-SPIRIT_API typedef details::AnsiStyle AnsiStyle;
+SPIRIT_API typedef details::AnsiStyle Style;
 
-constexpr AnsiStyle reset{AnsiStyle::reset};
-constexpr AnsiStyle bold{AnsiStyle::bold};
-constexpr AnsiStyle faint{AnsiStyle::faint};
-constexpr AnsiStyle italic{AnsiStyle::italic};
-constexpr AnsiStyle underline{AnsiStyle::underline};
-constexpr AnsiStyle slowBlink{AnsiStyle::slowBlink};
-constexpr AnsiStyle fastBlink{AnsiStyle::fastBlink};
-constexpr AnsiStyle swapColors{AnsiStyle::swapColors};
-constexpr AnsiStyle conceal{AnsiStyle::conceal};
-constexpr AnsiStyle crossed{AnsiStyle::crossed};
+constexpr Style reset{Style::reset};
+constexpr Style bold{Style::bold};
+constexpr Style faint{Style::faint};
+constexpr Style italic{Style::italic};
+constexpr Style underline{Style::underline};
+constexpr Style slowBlink{Style::slowBlink};
+constexpr Style fastBlink{Style::fastBlink};
+constexpr Style swapColors{Style::swapColors};
+constexpr Style conceal{Style::conceal};
+constexpr Style crossed{Style::crossed};
 
 
 ////////////////////////////////////////////////////////////

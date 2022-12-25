@@ -51,17 +51,6 @@ struct make_void
 template <typename... Ts>
 using void_t = typename make_void<Ts...>::type;
 
-// TODO: Macro magic here?
-// template<class T, class = void>
-// struct ValidExpression : std::false_type
-// {
-// };
-
-// template<class T, class U>
-// struct ValidExpression<T> : std::false_type
-// {
-// };
-
 
 ////////////////////////////////////////////////////////////
 /// \ingroup Concepts
@@ -90,27 +79,143 @@ struct Printable<
 ////////////////////////////////////////////////////////////
 /// \ingroup Concepts
 /// \brief Any object that can be used to do IO (<< or >> with const char *)
-/// 
+///
 ////////////////////////////////////////////////////////////
 template <class T, class = void>
 struct isStream : public std::false_type
 {
 };
 
-// out stream 
+// out stream
 template <class T>
 struct isStream<T, void_t<decltype(std::declval<T &>() << std::declval<const char *>())>>
     : public std::true_type
 {
 };
 
-// in stream 
+// in stream
 template <class T>
 struct isStream<T, void_t<decltype(std::declval<T &>() >> std::declval<const char *>())>>
     : public std::true_type
 {
 };
 
+
+////////////////////////////////////////////////////////////
+// Base class of Ts detection
+////////////////////////////////////////////////////////////
+
+template <class BaseType, class... Ts>
+struct areOfBaseType : public std::integral_constant<
+                           bool,
+                           std::conjunction<std::is_base_of<
+                               std::remove_cvref_t<BaseType>,
+                               std::remove_cvref_t<Ts>>...>::value>
+{
+};
+
+
+namespace details
+{
+
+template <class... Bs>
+struct Bases
+{
+};
+
+template <>
+struct Bases<>
+{
+    // first should trigger compile failure (none available)
+    using others = Bases<>;
+
+    template <class... B2s>
+    using extend = Bases<B2s...>;
+
+    template <class B2>
+    using prepend = Bases<B2>;
+};
+
+template <class B>
+struct Bases<B>
+{
+    typedef B first;
+    using others = Bases<>;
+
+    template <class... B2s>
+    using extend = Bases<B, B2s...>;
+
+    template <class B2>
+    using prepend = Bases<B2, B>;
+
+
+    template <class... Ts>
+    struct BasesOf
+    {
+        typedef std::
+            conditional_t<sp::traits::areOfBaseType<B, Ts...>::value, Bases<B>, others>
+                Bases_t;
+    };
+
+    struct Deepest
+    {
+        typedef Bases<B> Kept;
+        typedef B Deepest_t;
+    };
+
+    template <class... Ts>
+    struct DeepestBaseOf
+    {
+        typedef typename BasesOf<Ts...>::Bases_t BasesChain;
+        typedef typename BasesChain::Deepest::Deepest_t DeepestBaseOf_t;
+    };
+};
+
+template <class B, class... Bs>
+struct Bases<B, Bs...>
+{
+    typedef B first;
+    using others = Bases<Bs...>;
+
+    template <class... B2s>
+    using extend = Bases<B, Bs..., B2s...>;
+
+    // necessary to keep ordering (mostly for tests)
+    template <class B2>
+    using prepend = Bases<B2, B, Bs...>;
+
+
+    template <class... Ts>
+    struct BasesOf
+    {
+        typedef typename Bases<Bs...>::BasesOf<Ts...>::Bases_t SkipThisOne;
+        typedef typename SkipThisOne::prepend<B> Continue;
+
+        typedef std::conditional_t<sp::traits::areOfBaseType<B, Ts...>::value, Continue, SkipThisOne>
+            Bases_t;
+    };
+
+    struct Deepest
+    {
+        typedef std::conditional_t<
+            sp::traits::areOfBaseType<B, Bs...>::value,
+            Bases<Bs...>,
+            Bases<Bs..., B>>
+            Kept;
+
+        typedef typename Kept::Deepest::Deepest_t Deepest_t;
+    };
+
+    template <class... Ts>
+    struct DeepestBaseOf
+    {
+        typedef typename BasesOf<Ts...>::Bases_t BasesChain;
+        typedef typename BasesChain::Deepest::Deepest_t DeepestBaseOf_t;
+    };
+};
+
+
+} // namespace details
 
 
 } // namespace traits

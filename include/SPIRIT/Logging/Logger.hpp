@@ -86,7 +86,7 @@ struct SPIRIT_API LevelColor : sp::AnsiEscape
     constexpr LevelColor(
         sp::FgColor fg      = sp::defaultFg,
         sp::BgColor bg      = sp::onDefault,
-        sp::AnsiStyle style = sp::reset // no style
+        sp::Style style = sp::reset // no style
     )
         : fg{fg}, bg{bg}, style{style}
     {
@@ -94,7 +94,7 @@ struct SPIRIT_API LevelColor : sp::AnsiEscape
 
     sp::FgColor fg;
     sp::BgColor bg;
-    sp::AnsiStyle style;
+    sp::Style style;
 
     friend std::ostream &
     operator<<(std::ostream & os, LevelColor col)

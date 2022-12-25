@@ -47,7 +47,7 @@ private:
 int
 main()
 {
-    std::initializer_list<AnsiStyle> mods = {italic, bold};
+    std::initializer_list<Style> mods = {italic, bold};
     std::vector<std::string> words
         = {"The ",
            "Core ",

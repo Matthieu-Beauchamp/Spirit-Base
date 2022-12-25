@@ -37,14 +37,14 @@ main(int argc, char ** argv)
 
 
     // some styles omitted
-    std::array<sp::AnsiStyle, 5> styles{
+    std::array<sp::Style, 5> styles{
         sp::reset, // no style
         sp::bold,
         sp::underline,
         sp::swapColors,
         sp::crossed};
 
-    for (sp::AnsiStyle s : styles)
+    for (sp::Style s : styles)
         sp::ansiOut << s << "abcdefghijklmnop\n\n" << sp::reset;
 
     sp::ansiOut << std::endl;

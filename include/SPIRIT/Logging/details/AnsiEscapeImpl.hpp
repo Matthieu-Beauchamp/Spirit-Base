@@ -27,10 +27,10 @@
 #define SPIRIT_ANSIESCAPEIMPL_HPP
 
 #include "SPIRIT/config.hpp"
+#include "SPIRIT/Concepts/Concepts.hpp"
 
 #include <cmath>
 #include <iostream>
-#include <tuple>
 
 namespace sp
 {
@@ -103,16 +103,14 @@ class SPIRIT_API TerminalControl : public AnsiEscape
 namespace traits
 {
 
+
 ////////////////////////////////////////////////////////////
 /// \ingroup Concepts
 /// \brief All objects that derive from AnsiEscape
 ///
 ////////////////////////////////////////////////////////////
-template <class T>
-struct isAnsiEscape
-    : public std::integral_constant<
-          bool,
-          std::is_base_of<sp::AnsiEscape, std::remove_reference_t<std::remove_cv_t<T>>>::value>
+template <class... Ts>
+struct isAnsiEscape : public areOfBaseType<sp::AnsiEscape, Ts...>
 {
 };
 
@@ -124,11 +122,8 @@ struct isAnsiEscape
 /// CSI [...] m
 ///
 ////////////////////////////////////////////////////////////
-template <class T>
-struct isTextStyle
-    : public std::integral_constant<
-          bool,
-          std::is_base_of<sp::TextStyle, std::remove_reference_t<std::remove_cv_t<T>>>::value>
+template <class... Ts>
+struct isTextStyle : public areOfBaseType<sp::TextStyle, Ts...>
 {
 };
 
@@ -137,13 +132,8 @@ struct isTextStyle
 /// \brief All objects that derive from TerminalControl
 ///
 ////////////////////////////////////////////////////////////
-template <class T>
-struct isTerminalControl
-    : public std::integral_constant<
-          bool,
-          std::is_base_of<
-              sp::TerminalControl,
-              std::remove_reference_t<std::remove_cv_t<T>>>::value>
+template <class... Ts>
+struct isTerminalControl : public areOfBaseType<sp::TerminalControl, Ts...>
 {
 };
 
@@ -151,39 +141,32 @@ struct isTerminalControl
 ////////////////////////////////////////////////////////////
 // Boilerplate, use EscapeType_t
 ////////////////////////////////////////////////////////////
-// The Type targ is necessary for specializations to specialize
-template <class Type, class... Args>
-struct EscapeType
-{
-};
+// template <class Base0, class Base1, class Base2, class... Args>
+// struct WhichBase
+// {
+//     static constexpr bool which[3]
+//     {
+//         areOfBaseType<Base0, Args...>::value,
+//             areOfBaseType<Base1, Args...>::value,
+//             areOfBaseType<Base2, Args...>::value
+//     }
+// };
 
-template <class... Args>
-struct EscapeType<
-    std::enable_if_t<std::conjunction<isTextStyle<Args>...>::value, TextStyle>,
-    Args...>
-{
-    typedef TextStyle type;
-};
+// // Base tree is expected to be Base0 +-> Base1
+// //                                   +-> Base2
+// template <bool isBase0, bool isBase1, bool isBase2>
+// struct EscapeType
+// {
+// };
 
-template <class... Args>
-struct EscapeType<
-    std::enable_if_t<std::conjunction<isTerminalControl<Args>...>::value, TerminalControl>,
-    Args...>
-{
-    typedef TerminalControl type;
-};
+// template<bool isBase0>
+// struct EscapeType<isBase0, true, false>
+// {
+//     typedef 
+// };
 
-template <class... Args>
-struct EscapeType<
-    std::enable_if_t<
-        std::conjunction<isAnsiEscape<Args>...>::value
-            && !std::conjunction<isTextStyle<Args>...>::value
-            && !std::conjunction<isTerminalControl<Args>...>::value,
-        AnsiEscape>,
-    Args...>
-{
-    typedef AnsiEscape type;
-};
+
+
 
 ////////////////////////////////////////////////////////////
 /// \ingroup Concepts
@@ -191,8 +174,8 @@ struct EscapeType<
 ///
 /// If one of Args is not an AnsiEscape, no type is defined
 ////////////////////////////////////////////////////////////
-template <class... Args>
-using EscapeType_t = typename EscapeType<void, Args...>::type;
+// template <class... Args>
+// using EscapeType_t = typename EscapeType<Args...>::type;
 
 } // namespace traits
 
@@ -469,7 +452,7 @@ private:
 
 
 template <int num, char symbol>
-class Erase : AnsiEscape
+class Erase : TerminalControl
 {
 public:
 
@@ -485,28 +468,6 @@ private:
 
     int n;
 };
-
-
-////////////////////////////////////////////////////////////
-// Aggregate / combined escapes
-////////////////////////////////////////////////////////////
-
-template <class... Args>
-class Escapes : sp::traits::EscapeType_t<Args...>, public std::tuple<Args...>
-{
-public:
-
-    Escapes(Args &&... args) : std::tuple<Args...>{std::forward<Args>(args)...}
-    {
-    }
-
-    friend std::ostream &
-    operator<<(std::ostream & os, const Escapes & e)
-    {
-        return ((os << std::get<Args>(e)), ...);
-    }
-};
-
 
 } // namespace details
 
