@@ -28,6 +28,10 @@ TEST_CASE("Ansi Escapes")
         REQUIRE(sp::traits::isAnsiEscape<volatile sp::BgColor &&>::value);
         REQUIRE(sp::traits::isAnsiEscape<volatile sp::Style &&>::value);
 
+        REQUIRE(
+            sp::traits::isAnsiEscape<sp::Escapes<sp::FgColor, sp::BgColor>>::value
+        );
+
         REQUIRE_FALSE(sp::traits::isAnsiEscape<int>::value);
         REQUIRE_FALSE(sp::traits::isAnsiEscape<const char *>::value);
         REQUIRE_FALSE(sp::traits::isAnsiEscape<unsigned char &>::value);
@@ -47,6 +51,11 @@ TEST_CASE("Ansi Escapes")
         REQUIRE(sp::traits::isTextStyle<sp::FgGradient>::value);
         REQUIRE(sp::traits::isTextStyle<sp::BgGradient>::value);
 
+        REQUIRE(
+            sp::traits::isTextStyle<sp::Escapes<sp::FgColor, sp::BgColor>>::value
+        );
+
+
         REQUIRE_FALSE(sp::traits::isTextStyle<sp::AnsiEscape>::value);
         REQUIRE_FALSE(sp::traits::isTextStyle<sp::Bell>::value);
         REQUIRE_FALSE(sp::traits::isTextStyle<sp::MoveCursorTo>::value);
@@ -65,6 +74,8 @@ TEST_CASE("Ansi Escapes")
         REQUIRE_FALSE(sp::traits::isTerminalControl<sp::FgGradient>::value);
         REQUIRE_FALSE(sp::traits::isTerminalControl<sp::BgGradient>::value);
 
+        REQUIRE(sp::traits::isTerminalControl<sp::Escapes<sp::Bell, sp::CursorRight>>::value);
+
         REQUIRE(sp::traits::isTerminalControl<sp::Bell>::value);
         REQUIRE(sp::traits::isTerminalControl<sp::MoveCursorTo>::value);
         REQUIRE(sp::traits::isTerminalControl<sp::CursorUp>::value);
@@ -75,20 +86,36 @@ TEST_CASE("Ansi Escapes")
     {
         REQUIRE(sp::traits::isTextStyle<sp::Escapes<sp::RgbFgColor>>::value);
 
-        // REQUIRE(sp::traits::isTextStyle<
-        //         sp::Escapes<sp::RgbFgColor, sp::Style, sp::BgGradient>>::value);
+        REQUIRE(sp::traits::isTextStyle<
+                sp::Escapes<sp::RgbFgColor, sp::Style, sp::BgGradient>>::value);
 
-        // REQUIRE(sp::traits::isTerminalControl<
-        //         sp::Escapes<sp::EraseLine, sp::CarriageRet>>::value);
+        REQUIRE(sp::traits::isTerminalControl<
+                sp::Escapes<sp::EraseLine, sp::CarriageRet>>::value);
 
-        // REQUIRE(sp::traits::isTerminalControl<
-        //         sp::Escapes<sp::EraseLine, sp::MoveCursorTo>>::value);
+        REQUIRE(sp::traits::isTerminalControl<
+                sp::Escapes<sp::EraseLine, sp::MoveCursorTo>>::value);
 
-        // REQUIRE(
-        //     sp::traits::isAnsiEscape<sp::Escapes<sp::FgColor, sp::EraseScreen>>::value
-        // );
+        REQUIRE(
+            sp::traits::isAnsiEscape<sp::Escapes<sp::FgColor, sp::EraseScreen>>::value
+        );
 
         // should not compile
         // REQUIRE_FALSE(sp::traits::isAnsiEscape<sp::Escapes<int>>::value);
+
+
+        SECTION("Output order"){
+            std::stringstream ss{};
+            std::stringstream expected{};
+
+            auto esc = sp::Escapes{sp::red, sp::onBlack, sp::italic};
+
+            expected << sp::red << sp::onBlack << sp::italic;
+            ss << esc;
+
+            REQUIRE(ss.str() == expected.str());
+        }
     }
+
+
+
 }

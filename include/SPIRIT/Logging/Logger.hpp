@@ -31,6 +31,7 @@
 #include "spdlog/details/null_mutex.h"
 #include "spdlog/pattern_formatter.h"
 #include "spdlog/sinks/base_sink.h"
+#include "spdlog/spdlog.h"
 
 #include <array>
 #include <mutex>
@@ -60,50 +61,86 @@ using Error = details::Message<LogLevel::err, Args...>;
 template <class... Args>
 using Critical = details::Message<LogLevel::critical, Args...>;
 
-// Off level..?
 
 ////////////////////////////////////////////////////////////
 // wrapping spdlog
+//
+// for more details see https://github.com/gabime/spdlog/wiki
 ////////////////////////////////////////////////////////////
 
-using Logger = spdlog::logger;
+using Logger    = spdlog::logger;
+using LoggerPtr = std::shared_ptr<sp::Logger>;
+
+
+template <class Sink, class... SinkArgs>
+sp::LoggerPtr
+makeLogger(const std::string & name, SinkArgs &&... args)
+{
+    return spdlog::create<Sink>(name, std::forward<SinkArgs>(args)...);
+}
 
 // TODO: Free functions for convenience...
 
+// Returns the logger used by Spirit
+// You a free to remove/modify its sinks, format pattern, etc.
+// Note that added sinks will not share pattern, call set_pattern with 
+// spiritPattern() or your own:
+// sp::spiritLogger()->set_pattern(sp::spiritPattern());
+sp::LoggerPtr
+spiritLogger();
 
+// Get the default pattern string used by spiritLogger()
+std::string spiritPattern();
 
-
-
-
-// TODO: Naming is not great below...
+// Convenience for streaming Messages:
+// 
+// sp::spiritLog() << sp::Info("hello");
+//
+inline sp::Logger &
+spiritLog()
+{
+    return *sp::spiritLogger();
+}
 
 // set pattern reference:
 // https://github.com/gabime/spdlog/wiki/3.-Custom-formatting#customizing-format-using-set_pattern
 
+// TODO: Naming is not great below...
 
-struct SPIRIT_API LevelColor : sp::AnsiEscape
+
+////////////////////////////////////////////////////////////
+/// \brief Defines how the color range for a given LogLevel is displayed
+///     (see Logger, StreamSink and FileSink support color output)
+////////////////////////////////////////////////////////////
+struct SPIRIT_API LevelColor
+    : public sp::Escapes<sp::Style, sp::FgColor, sp::BgColor> // style first otherwise might reset colors
 {
+private:
+
+    typedef sp::Escapes<sp::Style, sp::FgColor, sp::BgColor> Base;
+
+public:
+
     constexpr LevelColor(
-        sp::FgColor fg      = sp::defaultFg,
-        sp::BgColor bg      = sp::onDefault,
+        sp::FgColor fg  = sp::defaultFg,
+        sp::BgColor bg  = sp::onDefault,
         sp::Style style = sp::reset // no style
     )
-        : fg{fg}, bg{bg}, style{style}
+        : Base{style, fg, bg}
     {
-    }
-
-    sp::FgColor fg;
-    sp::BgColor bg;
-    sp::Style style;
-
-    friend std::ostream &
-    operator<<(std::ostream & os, LevelColor col)
-    {
-        return os << col.style << col.bg << col.fg;
     }
 };
 
-
+////////////////////////////////////////////////////////////
+/// \brief Creates a Sink that outputs to a given ostream
+///
+/// The sink is meant to be used with sp::Logger,
+/// the stream can be accessed using AnsiStreamWrapper methods.
+///
+/// The stream is made to be aware of Ansi TextStyle escapes.
+/// It will not output them when ansi is disabled. (Terminal Control escape are not filtered)
+///
+////////////////////////////////////////////////////////////
 template <class Stream, class Mutex>
 class StreamSink : public spdlog::sinks::base_sink<Mutex>,
                    public sp::AnsiStreamWrapper<Stream>
@@ -119,6 +156,7 @@ public:
     typedef typename BaseStream::off_type off_type;
     typedef typename BaseStream::traits_type traits_type;
 
+    // Args are passed to Stream constructor
     template <class... Args>
     StreamSink(
         bool enableAnsi,
@@ -170,7 +208,13 @@ template <class Stream>
 using StreamSink_mt = StreamSink<Stream, std::mutex>;
 
 
-// TODO: So repetitive with AnsiStream...
+// TODO: So repetitive with AnsiStream... yet cannot inherit (degenerate)
+////////////////////////////////////////////////////////////
+/// \brief Creates an Ansi escapes aware sink that outputs to a FILE
+///
+/// Allows logging color output that will print plain text when the FILE
+/// is not a terminal.
+////////////////////////////////////////////////////////////
 template <class Mutex>
 class FileSink : public StreamSink<std::ostream, Mutex>
 {
@@ -184,7 +228,7 @@ public:
     typedef typename BaseSink::off_type off_type;
     typedef typename BaseSink::traits_type traits_type;
 
-    // TODO: Remove the enum from class, it is repeated with the AnsiStream
+    // TODO: Remove the enum from class, it is repeated with the AnsiStream. Poorly named
     enum sequenceMode
     {
         always,

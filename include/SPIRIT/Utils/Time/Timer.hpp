@@ -28,7 +28,7 @@
 
 #include <chrono>
 
-#include "SPIRIT/Core.hpp"
+#include "SPIRIT/Base.hpp"
 
 
 namespace sp

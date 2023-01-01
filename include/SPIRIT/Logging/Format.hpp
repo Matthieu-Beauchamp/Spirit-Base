@@ -68,7 +68,7 @@ template <
     std::enable_if_t<
         sp::traits::Printable<T>::value
             && !std::is_convertible<T, std::string_view>::value,
-        bool>>
+        bool> = true>
 std::string
 format(const T & printable)
 {

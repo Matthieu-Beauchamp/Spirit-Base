@@ -118,6 +118,9 @@ struct areOfBaseType : public std::integral_constant<
 namespace details
 {
 
+// Details for selecting the deepest base of a set of Ts,
+// given a list of bases.
+
 template <class... Bs>
 struct Bases
 {
@@ -214,8 +217,38 @@ struct Bases<B, Bs...>
     };
 };
 
-
 } // namespace details
+
+////////////////////////////////////////////////////////////
+/// \brief Finds the most derived base common to all Ts, given a set of Bases Bs.
+/// 
+/// This was needed to correcty detect the type of sp::Escapes<...>
+/// such that it will inherit from the common denominator (AnsiEscape, TextStyle, ...)
+/// 
+/// Diamond inheritance is not supported.
+/// Furthemore, Bases are expected to be a part of the same tree.
+/// 
+/// given the inheritance tree:
+/// \code
+///     A
+///   B  C
+/// D
+/// \endcode
+///
+/// then:
+/// \code
+/// Bases<A, B, C, D>::DeepestOf<A, B, C, D> -> A
+/// Bases<A, B, C, D>::DeepestOf<B, D> -> B
+/// \endcode
+/// 
+////////////////////////////////////////////////////////////
+template <class... Bs>
+struct Bases
+{
+    template <class... Ts>
+    using DeepestOf = typename details::Bases<Bs...>::DeepestBaseOf<Ts...>::DeepestBaseOf_t;
+};
+
 
 
 } // namespace traits

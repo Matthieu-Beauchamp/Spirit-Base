@@ -409,8 +409,7 @@ protected:
                 io.out.buf.end()
             ); // resets current pointer
 
-            // if (traits_type::not_eof(ch)) // FAILS ON '\0' !
-            if (!traits_type::eq_int_type(ch, traits_type::eof()))
+            if (Base::isNotEof(ch))
             {
                 char_type excess   = traits_type::to_char_type(ch);
                 io.out.buf.front() = excess;
@@ -433,7 +432,7 @@ private:
     sp::details::ioBuffers<mode, bufSize, char_type> io{};
 };
 
-constexpr static std::streamsize bufSizeDefault = 5;
+constexpr static std::streamsize bufSizeDefault = 128;
 typedef char charTypeDefault;
 typedef wchar_t wCharTypeDefault;
 

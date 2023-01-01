@@ -28,6 +28,7 @@
 
 
 #include "details/AnsiEscapeImpl.hpp"
+#include "Format.hpp"
 
 #include <iostream>
 #include <tuple>
@@ -36,19 +37,29 @@
 namespace sp
 {
 
+////////////////////////////////////////////////////////////
+// Utility, all AnsiAnscapes are convertible to str
+////////////////////////////////////////////////////////////
+template <class Esc, std::enable_if_t<sp::traits::isAnsiEscape<Esc>::value, bool> = true>
+std::string
+toStr(Esc && esc)
+{
+    return sp::format(esc);
+}
 
 ////////////////////////////////////////////////////////////
 // Aggregate / combined escapes
 ////////////////////////////////////////////////////////////
 
 template <class... Args>
-class Escapes //: //sp::traits::EscapeType_t<Args...>, public std::tuple<Args...>
+class Escapes : traits::EscapeType<Args...>, public std::tuple<Args...>
 {
 public:
 
-    Escapes(Args &&... args) : std::tuple<Args...>{std::forward<Args>(args)...}
-    {
-    }
+    using std::tuple<Args...>::tuple;
+    // constexpr Escapes(Args &&... args) : std::tuple<Args...>{std::forward<Args>(args)...}
+    // {
+    // }
 
     friend std::ostream &
     operator<<(std::ostream & os, const Escapes & e)
@@ -56,6 +67,10 @@ public:
         return ((os << std::get<Args>(e)), ...);
     }
 };
+
+// deduction
+template <class... Args>
+Escapes(Args &&...) -> Escapes<Args...>;
 
 
 ////////////////////////////////////////////////////////////
@@ -90,6 +105,8 @@ constexpr BgColor onDefault{BgColor::defaultCol};
 template <details::ansiColorTarget t>
 class RgbColor : public details::AnsiRgbColor<t>
 {
+public:
+
     constexpr RgbColor(sp::Uint8 r, sp::Uint8 g, sp::Uint8 b)
         : details::AnsiRgbColor<t>{r, g, b}
     {
@@ -112,16 +129,13 @@ class Gradient : public details::AnsiGradient<t>
 {
 public:
 
-    template <
-        class Str,
-        std::enable_if_t<std::is_convertible<Str, std::string>::value, bool> = true>
-    constexpr Gradient(
+    Gradient(
+        std::string_view text,
         RgbColor<t> start,
-        Str && text,
         RgbColor<t> end,
         bool resetAfter = true
     )
-        : details::AnsiGradient<t>{start, std::forward<Str>(text), end, resetAfter}
+        : details::AnsiGradient<t>{text, start, end, resetAfter}
     {
     }
 

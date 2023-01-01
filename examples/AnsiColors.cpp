@@ -1,4 +1,4 @@
-#include "SPIRIT/Core.hpp"
+#include "SPIRIT/Base.hpp"
 
 int
 main(int argc, char ** argv)

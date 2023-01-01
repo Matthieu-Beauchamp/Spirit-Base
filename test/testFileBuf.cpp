@@ -1,9 +1,9 @@
+#include "SPIRIT/Logging/details/FileBuf.hpp"
 #include "catch2/catch_all.hpp"
+
 #include <stdio.h>
 #include <string>
 #include <vector>
-
-#include "SPIRIT/Logging/details/FileBuf.hpp"
 
 
 TEST_CASE("basic_streambuf behavior of FileBuffer", "[FileBuffer]")
@@ -22,10 +22,7 @@ TEST_CASE("basic_streambuf behavior of FileBuffer", "[FileBuffer]")
     }
 
     std::string allChars{};
-    for (int i = 0x00; i < 0xFF + 1; ++i)
-    {
-        allChars.push_back((char)i);
-    }
+    for (int i = 0x00; i < 0xFF + 1; ++i) { allChars.push_back((char)i); }
 
     std::string nullCharInside{};
     nullCharInside.push_back('a');
@@ -34,20 +31,20 @@ TEST_CASE("basic_streambuf behavior of FileBuffer", "[FileBuffer]")
 
 
     int nRepeats = 50;
-    std::vector<std::string> strs{"Hello",
-                                  nullCharInside,
-                                  "",
-                                  "\n",
-                                  "1234567890qwertyuiopasdfghjklzxcvbnm,./"
-                                  ";'[]{}:\"<>?`~!@#$%^&*()_+-=\t",
-                                  allChars};
+    std::vector<std::string> strs{
+        "Hello",
+        nullCharInside,
+        "",
+        "\n",
+        "1234567890qwertyuiopasdfghjklzxcvbnm,./"
+        ";'[]{}:\"<>?`~!@#$%^&*()_+-=\t",
+        allChars};
 
     // string are unreliable, we have null chars
     std::vector<char> expected{};
     for (const auto & s : strs)
         for (int _ = 0; _ < nRepeats; ++_)
-            for (char c : s)
-                expected.push_back(c);
+            for (char c : s) expected.push_back(c);
 
     SECTION("Output")
     {
@@ -154,6 +151,7 @@ TEST_CASE("basic_streambuf behavior of FileBuffer", "[FileBuffer]")
         fclose(f);
     }
 
+
     SECTION("Wide chars IO")
     {
         FILE * f = fopen("tempWideIO.txt", "w+");
@@ -162,19 +160,24 @@ TEST_CASE("basic_streambuf behavior of FileBuffer", "[FileBuffer]")
         for (const auto & s : strs)
         {
             std::wstring ws{};
-            for(char c : s)
-                ws.push_back((wchar_t)c);
+            for (char c : s)
+            {
+                // fails if not unsigned, for the allChars str, 
+                // => \255 becomes EOF and a character is missed for every iteration
+                ws.push_back((wchar_t)(unsigned char)c);
+            }
             wstrs.push_back(ws);
         }
 
         sp::details::wIOFileBuf filebuf{f};
         for (std::wstring str : wstrs)
         {
-            size_t sz = str.size();
+            size_t sz       = str.size();
             size_t byteSize = sz * (sizeof(wchar_t) / sizeof(char));
 
             // verifies that strings containing null still gives us the expected
-            // size printf("size %u\n", sz);
+            // size
+            // printf("size %u\n", sz);
 
             // Must be enough to ensure buffer overflows
             for (int i = 0; i < nRepeats; ++i)

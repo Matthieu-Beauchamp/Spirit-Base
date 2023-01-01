@@ -125,7 +125,7 @@ StreamSink<Stream, Mutex>::filterSequences(const char_type * start, size_t size)
         if (beg == last || beg > end)
             throw sp::SpiritError{
                 "Missing an AnsiEscape termination or "
-                "unsupport sequence used in logging: {}",
+                "unsupported sequence used in logging: {}",
                 start};
 
         this->stream().write(beg, end - beg);

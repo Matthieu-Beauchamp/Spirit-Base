@@ -1,4 +1,4 @@
-#include "SPIRIT/Core.hpp"
+#include "SPIRIT/Base.hpp"
 #include "SPIRIT/Utils/Time/Clock.hpp"
 
 #include <thread>
@@ -62,7 +62,7 @@ private:
     void
     printProgress(int percent)
     {
-        sp::ansiOut << sp::IO::format("{:>3}% |", percent);
+        sp::ansiOut << sp::format("{:>3}% |", percent);
 
         if (percent % 2 == 1)
         {

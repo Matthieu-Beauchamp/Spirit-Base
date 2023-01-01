@@ -49,7 +49,9 @@ enableVirtualTerminal(FILE * file)
 {
 #if defined(SPIRIT_OS_WINDOWS)
     // Set output mode to handle virtual terminal sequences
+    // TODO: Once on windows, change this to use _fileno(file)
     HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
+    
     if (hOut == INVALID_HANDLE_VALUE)
     {
         return false;

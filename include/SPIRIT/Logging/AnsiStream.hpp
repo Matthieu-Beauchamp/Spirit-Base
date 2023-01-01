@@ -54,6 +54,7 @@ private:
     using StreamType::rdbuf;
 };
 
+
 ////////////////////////////////////////////////////////////
 /// It is necessary that we do not inherit from ostream
 /// since it causes ambiguous overload resolutions for operator<<.

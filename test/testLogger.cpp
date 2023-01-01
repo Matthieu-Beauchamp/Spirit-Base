@@ -124,3 +124,30 @@ TEST_CASE("File Sinks")
 
     // Should test that pattern formatters and integration with spdlog's api
 }
+
+TEST_CASE("Spirit's Logger"){
+    sp::LoggerPtr logger = sp::spiritLogger();
+
+    auto onSink = std::make_shared<sp::StreamSink_mt<std::stringstream>>(true);
+    auto offSink = std::make_shared<sp::StreamSink_mt<std::stringstream>>(false);
+
+    logger->sinks().push_back(onSink);
+    logger->sinks().push_back(offSink);
+    sp::spiritLogger()->set_pattern(sp::spiritPattern());
+
+    *logger << sp::Info{"Meaningful information: {}{}{}", sp::red, 1, sp::reset};
+    sp::spiritLog() << sp::Warn("Boom");
+    logger->flush();
+
+    std::string onOut{onSink->stream().str()};
+    std::string offOut{offSink->stream().str()};
+
+    sp::spiritLog() << sp::Info{onOut};
+    sp::spiritLog() << sp::Info{offOut};
+
+    REQUIRE(onOut != "");
+    REQUIRE(offOut != "");
+    REQUIRE(containsAnsiSequence(onOut) == true);
+    REQUIRE(containsAnsiSequence(offOut) == false);
+
+}

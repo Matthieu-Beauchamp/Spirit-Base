@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////
 //
-// Spirit Engine
+// Spirit
 // Copyright (C) 2022 Matthieu Beauchamp-Boulay
 //
 // This software is provided 'as-is', without any express or implied warranty.
@@ -23,27 +23,47 @@
 ////////////////////////////////////////////////////////////
 
 
+#ifndef SPIRIT_BASE_HPP
+#define SPIRIT_BASE_HPP
 
 
-#ifndef SPIRIT_ENGINE_NONCOPYABLE_HPP
-#define SPIRIT_ENGINE_NONCOPYABLE_HPP
+////////////////////////////////////////////////////////////
+/// \defgroup Base Base
+///
+/// \brief Base module of the Spirit library
+/// 
+/// The Base module contains the basic faciliities on which 
+/// Spirit relies across all modules.
+///
+/// For users, the Configuration module is the most relevant.
+/// 
+/// Users may also wish to use the Ansi aware Logging facilities
+/// for colored output (and more).
+/// 
+////////////////////////////////////////////////////////////
 
 
-namespace sp
-{
+#include "config.hpp"
 
-class NonCopyable
-{
-public:
-    NonCopyable() = default;
+#include "Logging/AnsiEscape.hpp"
+#include "Logging/AnsiStream.hpp"
 
-    NonCopyable(const NonCopyable&) = delete;
+// Pretty function output for Loggers
+// TODO: We should fork spdlog and modify the tweakme.hpp
+#ifndef SPDLOG_FUNCTION
+#ifdef __PRETTY_FUNCTION__
+#    define SPDLOG_FUNCTION __PRETTY_FUNCTION__
+#else
+#    define SPDLOG_FUNCTION __FUNCTION__
+#endif
+#endif
+#include "Logging/Format.hpp"
+#include "Logging/Message.hpp"
+#include "Logging/Logger.hpp"
 
-    NonCopyable & operator=(const NonCopyable&) = delete;
+// include utils?
 
-};
-
-} // namespace sp
+#include "Error/Error.hpp"
 
 
-#endif //SPIRIT_ENGINE_NONCOPYABLE_HPP
+#endif // SPIRIT_BASE_HPP

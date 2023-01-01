@@ -26,11 +26,12 @@
 #ifndef SPIRIT_ANSIESCAPEIMPL_HPP
 #define SPIRIT_ANSIESCAPEIMPL_HPP
 
-#include "SPIRIT/config.hpp"
 #include "SPIRIT/Concepts/Concepts.hpp"
+#include "SPIRIT/config.hpp"
 
 #include <cmath>
 #include <iostream>
+#include <sstream>
 
 namespace sp
 {
@@ -138,44 +139,9 @@ struct isTerminalControl : public areOfBaseType<sp::TerminalControl, Ts...>
 };
 
 
-////////////////////////////////////////////////////////////
-// Boilerplate, use EscapeType_t
-////////////////////////////////////////////////////////////
-// template <class Base0, class Base1, class Base2, class... Args>
-// struct WhichBase
-// {
-//     static constexpr bool which[3]
-//     {
-//         areOfBaseType<Base0, Args...>::value,
-//             areOfBaseType<Base1, Args...>::value,
-//             areOfBaseType<Base2, Args...>::value
-//     }
-// };
-
-// // Base tree is expected to be Base0 +-> Base1
-// //                                   +-> Base2
-// template <bool isBase0, bool isBase1, bool isBase2>
-// struct EscapeType
-// {
-// };
-
-// template<bool isBase0>
-// struct EscapeType<isBase0, true, false>
-// {
-//     typedef 
-// };
-
-
-
-
-////////////////////////////////////////////////////////////
-/// \ingroup Concepts
-/// \brief Determine the common Escape type of Args...
-///
-/// If one of Args is not an AnsiEscape, no type is defined
-////////////////////////////////////////////////////////////
-// template <class... Args>
-// using EscapeType_t = typename EscapeType<Args...>::type;
+template <class... Args>
+using EscapeType = typename sp::traits::
+    Bases<sp::AnsiEscape, sp::TextStyle, sp::TerminalControl>::DeepestOf<Args...>;
 
 } // namespace traits
 
@@ -244,6 +210,13 @@ class AnsiRgbColor : TextStyle
 {
 public:
 
+    // Uint16 to avoid having to cast down, values must be between 0 and 255
+    constexpr AnsiRgbColor(sp::Uint16 r, sp::Uint16 g, sp::Uint16 b)
+        : r{static_cast<sp::Uint8>(r)}, g{static_cast<sp::Uint8>(g)},
+          b{static_cast<sp::Uint8>(b)}
+    {
+    }
+
     sp::Uint8 r;
     sp::Uint8 g;
     sp::Uint8 b;
@@ -276,60 +249,64 @@ class AnsiGradient : TextStyle
 {
 public:
 
-    template <
-        class Str,
-        std::enable_if_t<std::is_convertible<Str, std::string>::value, bool> = true>
-    constexpr AnsiGradient(
+    AnsiGradient(
+        std::string_view text,
         AnsiRgbColor<t> start,
-        Str && text,
         AnsiRgbColor<t> end,
         bool resetAfter = true
     )
-        : txt{std::forward<Str>(text)}, start{start}, end{end}, resetAfter{
-                                                                    resetAfter}
+        : txt{}
     {
-    }
+        std::string buf{};
+        buf.reserve(
+            // rgb color escapes: "\esc[38;2;r;g;bm"
+            // => counting 3 digits for colors gives 19 + char => 20 per
+            // original char we add the reset: \esc[39m => 5 chars
+            text.size() * 20 + 5
+        );
+        std::stringstream ss{std::move(buf)};
 
-    friend std::ostream &
-    operator<<(std::ostream & os, const AnsiGradient & grad)
-    {
         // We can't use our Math lib since this is part of core,
         // thus we do our own here
 
         // Conversion is required to avoid overflows since rgb is stored as Uint8
-        sp::Int16 start[3]{grad.start.r(), grad.start.g(), grad.start.b()};
-        sp::Int16 end[3]{grad.end.r(), grad.end.g(), grad.end.b()};
+        sp::Int16 first[3]{start.r, start.g, start.b};
+        sp::Int16 last[3]{end.r, end.g, end.b};
 
         float step[3]{};
-        std::size_t nSteps = grad.txt.size() - 1;
+        std::size_t nSteps = text.size() - 1;
         for (sp::Int32 i = 0; i < 3; ++i)
         {
-            float deltaCol = end[i] - start[i];
+            float deltaCol = last[i] - first[i];
             step[i]        = deltaCol / nSteps;
         }
 
-        for (std::size_t i = 0; i < grad.txt.size(); ++i)
+        for (std::size_t i = 0; i < text.size(); ++i)
         {
             AnsiRgbColor<t> col{
-                static_cast<sp::Uint8>(std::round(step[0] * i + start[0])),
-                static_cast<sp::Uint8>(std::round(step[1] * i + start[1])),
-                static_cast<sp::Uint8>(std::round(step[2] * i + start[2]))};
+                static_cast<sp::Uint16>(std::round(step[0] * i + first[0])),
+                static_cast<sp::Uint16>(std::round(step[1] * i + first[1])),
+                static_cast<sp::Uint16>(std::round(step[2] * i + first[2]))};
 
-            os << col << grad.txt[i];
+            ss << col << text[i];
         }
 
-        if (grad.resetAfter)
-            os << AnsiColor<t>{AnsiColor<t>::defaultCol};
+        if (resetAfter)
+            ss << AnsiColor<t>{AnsiColor<t>::defaultCol};
 
-        return os;
+        this->txt = ss.str();
+    }
+
+
+    friend std::ostream &
+    operator<<(std::ostream & os, const AnsiGradient & grad)
+    {
+        return os << grad.txt;
     }
 
 private:
 
     std::string txt;
-    AnsiRgbColor<t> start;
-    AnsiRgbColor<t> end;
-    bool resetAfter;
 };
 
 

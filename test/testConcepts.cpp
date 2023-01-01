@@ -17,7 +17,7 @@ struct D : public B
 
 TEST_CASE("Concepts")
 {
-    SECTION("Bases")
+    SECTION("Bases details")
     {
         using namespace sp::traits::details;
 
@@ -78,13 +78,23 @@ TEST_CASE("Concepts")
         REQUIRE(std::is_same<
                 Bases<A, B, C, D>::DeepestBaseOf<A, B, C, D>::DeepestBaseOf_t,
                 A>::value);
-        
+
         REQUIRE(
             std::is_same<Bases<A, B, D>::DeepestBaseOf<B, D>::DeepestBaseOf_t, B>::value
         );
- 
+
         REQUIRE(
             std::is_same<Bases<A, B, C, D>::DeepestBaseOf<D>::DeepestBaseOf_t, D>::value
         );
+    }
+
+    SECTION("Usage")
+    {
+        using namespace sp::traits;
+
+        REQUIRE(std::is_same<Bases<A>::DeepestOf<A, B, C, D>, A>::value);
+        REQUIRE(std::is_same<Bases<A, B, C, D>::DeepestOf<A, B, C, D>, A>::value);
+        REQUIRE(std::is_same<Bases<A, B, D>::DeepestOf<B, D>, B>::value);
+        REQUIRE(std::is_same<Bases<A, B, C, D>::DeepestOf<D>, D>::value);
     }
 }

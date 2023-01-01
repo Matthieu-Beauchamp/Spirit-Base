@@ -29,8 +29,8 @@ TEST_CASE("Ansi Stream on connex classes")
         SECTION("isStream")
         {
             REQUIRE(sp::traits::isStream<sp::AnsiStream>::value);
-            REQUIRE(sp::traits::isStream<sp::details::AnsiStreamWrapper<std::ostream>>::value);
-            REQUIRE(sp::traits::isStream<sp::details::AnsiStreamWrapper<std::stringstream>>::value);
+            REQUIRE(sp::traits::isStream<sp::AnsiStreamWrapper<std::ostream>>::value);
+            REQUIRE(sp::traits::isStream<sp::AnsiStreamWrapper<std::stringstream>>::value);
 
             REQUIRE(sp::traits::isStream<std::ostream>::value);
             REQUIRE(sp::traits::isStream<std::basic_iostream<char>>::value);
@@ -70,9 +70,10 @@ TEST_CASE("Ansi Stream on connex classes")
         bool ansiEnabled = original.isAnsiEnabled();
         REQUIRE(f != nullptr);
 
-        sp::AnsiStream last{std::move(original)};
-        REQUIRE(last.file() == f);
-        REQUIRE(last.isAnsiEnabled() == ansiEnabled);
+        // Move constructor was disabled, standard ostreams differ too much to generalize it
+        // sp::AnsiStream last{std::move(original)};
+        // REQUIRE(last.file() == f);
+        // REQUIRE(last.isAnsiEnabled() == ansiEnabled);
     }
 
     SECTION("Child Streams")
@@ -91,12 +92,11 @@ TEST_CASE("Ansi Stream on connex classes")
 
         ss1 << sp::red << "hello";
         ss2 << "world";
-        std::swap(ss1, ss2);
 
         // note that they also use the .stream() or operator-> to access the
         // underlying stream
-        REQUIRE(ss2->str() == expectedOn.str());
-        REQUIRE(ss1->str() == expectedOff.str());
+        REQUIRE(ss1->str() == expectedOn.str());
+        REQUIRE(ss2->str() == expectedOff.str());
     }
 
 
