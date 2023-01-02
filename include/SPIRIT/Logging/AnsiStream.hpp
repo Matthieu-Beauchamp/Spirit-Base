@@ -26,9 +26,9 @@
 #ifndef SPIRIT_ENGINE_COLOREDSTREAM_HPP
 #define SPIRIT_ENGINE_COLOREDSTREAM_HPP
 
+#include "SPIRIT/Configuration/config.hpp"
 #include "AnsiEscape.hpp"
 #include "SPIRIT/Concepts/Concepts.hpp"
-#include "SPIRIT/config.hpp"
 #include "details/FileBuf.hpp"
 
 #include <memory>

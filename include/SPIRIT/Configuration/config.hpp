@@ -37,7 +37,7 @@
 /// All Macros described here should be defined by users before
 /// including any headers.
 /// Furthermore, only the top level (module) headers
-/// in include/SPIRIT/*.hpp should be included to ensure proper
+/// in include/SPIRIT/[module].hpp should be included to ensure proper
 /// configuration.
 ///
 ////////////////////////////////////////////////////////////

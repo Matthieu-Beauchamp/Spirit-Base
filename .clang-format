@@ -120,7 +120,7 @@ PenaltyExcessCharacter: 15
 PenaltyReturnTypeOnItsOwnLine: 0
 PointerAlignment: Middle
 ReflowComments:  true
-SortIncludes:    true
+SortIncludes:    false
 SortUsingDeclarations: true
 SpaceAfterCStyleCast: false
 SpaceAfterLogicalNot: false

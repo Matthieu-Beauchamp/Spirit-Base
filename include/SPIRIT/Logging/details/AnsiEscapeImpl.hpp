@@ -27,7 +27,7 @@
 #define SPIRIT_ANSIESCAPEIMPL_HPP
 
 #include "SPIRIT/Concepts/Concepts.hpp"
-#include "SPIRIT/config.hpp"
+#include "SPIRIT/Configuration/config.hpp"
 
 #include <cmath>
 #include <iostream>

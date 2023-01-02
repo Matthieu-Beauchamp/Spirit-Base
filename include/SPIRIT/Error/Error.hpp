@@ -25,7 +25,7 @@
 #ifndef SPIRIT_ENGINE_ERROR_HPP
 #define SPIRIT_ENGINE_ERROR_HPP
 
-#include "SPIRIT/config.hpp"
+#include "SPIRIT/Configuration/config.hpp"
 #include "SPIRIT/Logging/Format.hpp"
 
 #include <exception>
@@ -35,16 +35,15 @@ namespace sp
 {
 
 ////////////////////////////////////////////////////////////
-/// \ingroup Core
+/// \ingroup Base
 /// \defgroup Errors Errors
 ///
 /// Define Error classes used by Spirit.
-/// Errors are not meant to be catched and handled.
+/// Errors are usually not meant to be catched and handled.
 /// They are meant to terminate the program and provide a Stacktrace
 /// on program failure.
 ///
 /// Stacktrace can be disabled with SPIRIT_USE_STACKTRACE
-/// Error throwing can be disabled with SPIRIT_USE_ERRORS
 /// \see Configuration
 ////////////////////////////////////////////////////////////
 

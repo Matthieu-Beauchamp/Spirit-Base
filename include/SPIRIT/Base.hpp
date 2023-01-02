@@ -43,7 +43,7 @@
 ////////////////////////////////////////////////////////////
 
 
-#include "config.hpp"
+#include "Configuration/config.hpp"
 
 #include "Logging/AnsiEscape.hpp"
 #include "Logging/AnsiStream.hpp"
