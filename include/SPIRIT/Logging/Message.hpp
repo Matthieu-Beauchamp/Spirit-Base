@@ -26,6 +26,7 @@
 #ifndef SPIRIT_MESSAGE_HPP
 #define SPIRIT_MESSAGE_HPP
 
+#include "SPIRIT/config.hpp"
 #include "Format.hpp"
 #include "spdlog/logger.h"
 

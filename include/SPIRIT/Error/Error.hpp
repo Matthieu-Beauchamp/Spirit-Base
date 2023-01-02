@@ -25,8 +25,10 @@
 #ifndef SPIRIT_ENGINE_ERROR_HPP
 #define SPIRIT_ENGINE_ERROR_HPP
 
-#include "SPIRIT/config.hpp"
 #include "SPIRIT/Logging/Format.hpp"
+#include "SPIRIT/Logging/Logger.hpp"
+#include "SPIRIT/config.hpp"
+
 #include <exception>
 
 
@@ -117,27 +119,9 @@ class SPIRIT_API AssertionError : public SpiritError
 #define SPIRIT_CHECK(COND, ...)                                                \
     if (!(COND))                                                               \
     {                                                                          \
-        SPIRIT_WARN(__VA_ARGS__);                                              \
+        sp::spiritLog() << sp::Warn{(__VA_ARGS__)};                            \
     }
 
-
-////////////////////////////////////////////////////////////
-/// \ingroup Errors
-/// \brief Handles Error throwing according to SPIRIT_USE_ERRORS
-///
-/// If Errors are enabled, logs and throws the error
-/// If Errors are disabled, only log the error without throwing
-///
-/// \see Configuration
-////////////////////////////////////////////////////////////
-#define SPIRIT_THROW(error) SPIRIT_ERROR(error.what())
-
-#if SPIRIT_USE_ERRORS == SPIRIT_TRUE
-#    undef SPIRIT_THROW
-#    define SPIRIT_THROW(error)                                                \
-        SPIRIT_ERROR(error.what());                                            \
-        throw(error)
-#endif
 
 ////////////////////////////////////////////////////////////
 /// \ingroup Errors
@@ -147,8 +131,7 @@ class SPIRIT_API AssertionError : public SpiritError
 #define SPIRIT_ASSERT(COND, ...)                                               \
     if (!(COND))                                                               \
     {                                                                          \
-        sp::AssertionError err{__VA_ARGS__};                                   \
-        SPIRIT_THROW(err);                                                     \
+        throw(sp::AssertionError{__VA_ARGS__});                                               \
     }
 
 

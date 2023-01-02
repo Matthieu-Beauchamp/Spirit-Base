@@ -26,6 +26,8 @@
 #ifndef SPIRIT_CONFIG_HPP
 #define SPIRIT_CONFIG_HPP
 
+#include <cstdint>
+
 ////////////////////////////////////////////////////////////
 /// \ingroup Base
 /// \defgroup Configuration Configuration
@@ -73,19 +75,6 @@
 #define SPIRIT_TRUE  1
 #define SPIRIT_FALSE 0
 
-////////////////////////////////////////////////////////////
-/// \ingroup Configuration
-/// \brief Enables Error (Exception) throwing.
-///
-/// Setting this to SPIRIT_FALSE effectively replaces the SPIRIT_THROW
-/// internal macro to simply log the error without throwing
-///
-/// Allows users who do not want us to throw exceptions to disable them
-/// (or just for release builds)
-////////////////////////////////////////////////////////////
-#ifndef SPIRIT_USE_ERRORS
-#    define SPIRIT_USE_ERRORS SPIRIT_TRUE
-#endif
 
 ////////////////////////////////////////////////////////////
 /// \ingroup Configuration
@@ -101,6 +90,13 @@
 #endif
 
 ////////////////////////////////////////////////////////////
+// Define a portable debug macro
+////////////////////////////////////////////////////////////
+#if !defined(NDEBUG)
+#    define SPIRIT_DEBUG
+#endif
+
+////////////////////////////////////////////////////////////
 /// \ingroup Configuration
 /// \brief Enables all logging
 ///
@@ -111,49 +107,51 @@
 ////////////////////////////////////////////////////////////
 #ifndef SPIRIT_VERBOSE
 #    define SPIRIT_VERBOSE SPIRIT_FALSE
+#    ifdef SPIRIT_DEBUG
+#        define SPDLOG_ACTIVE_LEVEL SPDLOG_LEVEL_TRACE
+#    else
+#        define SPDLOG_ACTIVE_LEVEL SPDLOG_LEVEL_WARN
+#    endif
+#else
+#    define SPDLOG_ACTIVE_LEVEL SPDLOG_LEVEL_TRACE
 #endif
 
-////////////////////////////////////////////////////////////
-// Define a portable debug macro
-////////////////////////////////////////////////////////////
-#if !defined(NDEBUG)
-#    define SPIRIT_DEBUG
-#endif
 
 namespace sp
 {
 
 ////////////////////////////////////////////////////////////
 // Portable fixed-size types into Spirit
-//
-// This section was copied from SFML's config file
 ////////////////////////////////////////////////////////////
 
-// All "common" platforms use the same size for char, short and int
-// (basically there are 3 types for 3 sizes, so no other match is possible),
-// we can use them without doing any kind of check
+typedef std::int8_t Int8;
+typedef std::uint8_t Uint8;
 
-// 8 bits integer types
-typedef signed char Int8;
-typedef unsigned char Uint8;
+typedef std::int16_t Int16;
+typedef std::uint16_t Uint16;
 
-// 16 bits integer types
-typedef signed short Int16;
-typedef unsigned short Uint16;
+typedef std::int32_t Int32;
+typedef std::uint32_t Uint32;
 
-// 32 bits integer types
-typedef signed int Int32;
-typedef unsigned int Uint32;
-
-// 64 bits integer types
-#if defined(_MSC_VER)
-typedef signed __int64 Int64;
-typedef unsigned __int64 Uint64;
-#else
-typedef signed long long Int64;
-typedef unsigned long long Uint64;
-#endif
+typedef std::int64_t Int64;
+typedef std::uint64_t Uint64;
 
 } // namespace sp
+
+
+////////////////////////////////////////////////////////////
+// SPDLOG configuration
+////////////////////////////////////////////////////////////
+
+// Pretty function output for Loggers
+// TODO: We should fork spdlog and modify the tweakme.hpp
+#ifndef SPDLOG_FUNCTION
+#    ifdef __PRETTY_FUNCTION__
+#        define SPDLOG_FUNCTION __PRETTY_FUNCTION__
+#    else
+#        define SPDLOG_FUNCTION __FUNCTION__
+#    endif
+#endif
+
 
 #endif // SPIRIT_CONFIG_HPP

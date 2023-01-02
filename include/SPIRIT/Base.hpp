@@ -48,15 +48,6 @@
 #include "Logging/AnsiEscape.hpp"
 #include "Logging/AnsiStream.hpp"
 
-// Pretty function output for Loggers
-// TODO: We should fork spdlog and modify the tweakme.hpp
-#ifndef SPDLOG_FUNCTION
-#ifdef __PRETTY_FUNCTION__
-#    define SPDLOG_FUNCTION __PRETTY_FUNCTION__
-#else
-#    define SPDLOG_FUNCTION __FUNCTION__
-#endif
-#endif
 #include "Logging/Format.hpp"
 #include "Logging/Message.hpp"
 #include "Logging/Logger.hpp"

@@ -26,6 +26,7 @@
 #ifndef SPIRIT_LOGGER_HPP
 #define SPIRIT_LOGGER_HPP
 
+#include "SPIRIT/config.hpp"
 #include "AnsiStream.hpp"
 #include "Message.hpp"
 #include "spdlog/details/null_mutex.h"
