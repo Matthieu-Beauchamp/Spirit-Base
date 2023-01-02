@@ -26,17 +26,17 @@
 #ifndef SPIRIT_LOGGER_HPP
 #define SPIRIT_LOGGER_HPP
 
-#include "SPIRIT/config.hpp"
 #include "AnsiStream.hpp"
 #include "Message.hpp"
+#include "SPIRIT/config.hpp"
 #include "spdlog/details/null_mutex.h"
 #include "spdlog/pattern_formatter.h"
 #include "spdlog/sinks/base_sink.h"
 #include "spdlog/spdlog.h"
 
 #include <array>
-#include <mutex>
 #include <memory>
+#include <mutex>
 
 namespace sp
 {
@@ -80,6 +80,10 @@ makeLogger(const std::string & name, SinkArgs &&... args)
 {
     return spdlog::create<Sink>(name, std::forward<SinkArgs>(args)...);
 }
+
+sp::LoggerPtr
+makeLogger(const std::string & name);
+
 
 // TODO: Free functions for convenience...
 
@@ -245,8 +249,8 @@ public:
     }
 };
 
-using FileSink_st = AnsiFileSink<spdlog::details::null_mutex>;
-using FileSink_mt = AnsiFileSink<std::mutex>;
+using AnsiFileSink_st = AnsiFileSink<spdlog::details::null_mutex>;
+using AnsiFileSink_mt = AnsiFileSink<std::mutex>;
 
 } // namespace sp
 

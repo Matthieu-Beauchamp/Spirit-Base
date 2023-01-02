@@ -27,6 +27,15 @@
 namespace sp
 {
 
+sp::LoggerPtr
+makeLogger(const std::string & name)
+{
+    auto new_logger = std::make_shared<spdlog::logger>(std::move(name));
+    spdlog::details::registry::instance().initialize_logger(new_logger);
+    return new_logger;
+}
+
+
 std::string spiritPattern(){
         std::string basePattern
             = "[%T.%e][%n][%^%l%$]"; // [H:M:S.ms][name][log level (colored)]
@@ -61,7 +70,7 @@ spiritLogger()
         constexpr sp::RgbFgColor pink{245, 66, 212};
         std::string name = sp::format("{}{}", sp::bold, sp::FgGradient("Spirit", lightBlue, pink));
 
-        logger = makeLogger<sp::FileSink_mt>(name, stdout);
+        logger = makeLogger<sp::AnsiFileSink_mt>(name, stdout);
 
         logger->set_pattern(spiritPattern());
     }

@@ -9,3 +9,9 @@ add_executable(AnsiColorsExample
         )
 
 target_link_libraries(AnsiColorsExample spirit-base)
+
+add_executable(LoggersExample
+        "Loggers.cpp"
+        )
+
+target_link_libraries(LoggersExample spirit-base)
