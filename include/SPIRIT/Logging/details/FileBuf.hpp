@@ -59,8 +59,6 @@ public:
 
 protected:
 
-    // TODO: *PRIORITY* Error handling on C function calls (positioning, read, write)
-
     ////////////////////////////////////////////////////////////
     // Locales
     ////////////////////////////////////////////////////////////
@@ -72,7 +70,7 @@ protected:
     // Positioning
     ////////////////////////////////////////////////////////////
 
-    // TODO: Changing the buffer is not yet supported
+    // TODO: Changing the buffer is not yet supported (should it?)
 
     // offset is assumed to be in terms of char_type.
     // for example if using char_type = wchar,
@@ -143,10 +141,23 @@ protected:
     }
 
     std::streamsize
-    write(char_type * src, pos_type seekPos, std::streamsize n)
+    write(const char_type * src, pos_type seekPos, std::streamsize n)
     {
         seekpos(seekPos, std::ios_base::out);
         return fwrite(src, sizeof(char_type), n, targetFile);
+    }
+
+    ////////////////////////////////////////////////////////////
+    // Errors
+    ////////////////////////////////////////////////////////////
+
+    // error is returned and cleared
+    int_type
+    checkError()
+    {
+        int_type err = ferror(targetFile);
+        clearerr(targetFile);
+        return err;
     }
 
 private:
@@ -160,10 +171,6 @@ private:
 
 
 // TODO: Check for optimal size / strategy from other implementations
-// Note on writing directly to the FILE buffers, not a good idea I believe
-//  (not even sure it's allowed).
-// In any case, chars would be passed one at a time throught overflow(). Not great
-
 
 template <std::streamsize bufSize, typename char_type>
 struct ioBuffer
@@ -174,6 +181,9 @@ struct ioBuffer
 
 
 // Allows disabling output or input buffers depending on mode
+// Note that the in/out buffer members must always exists,
+//  otherwise we must define separe specializations for FileBuf.
+// The unused buffers will instead have size 0
 template <std::ios_base::openmode mode, std::streamsize bufSize, typename char_type>
 struct ioBuffers
 {
@@ -252,10 +262,6 @@ public:
     typedef typename sp::details::FileBufBase<char_type>::pos_type pos_type;
     typedef typename sp::details::FileBufBase<char_type>::off_type off_type;
 
-    // static_assert(sizeof(char_type) < sizeof(int_type),
-    //               "char_type cannot be bigger than int_type, otherwise eof "
-    //               "cannot be distinguished");
-
     static_assert(bufSize > 0, "Requires at least a single char slot in buffer");
 
 
@@ -305,7 +311,6 @@ protected:
 
     // TODO: xgetn can be overloaded for better efficiency
 
-    // TODO: Don't override methods that we can't implement...
 
     std::streamsize
     showmanyc() override
@@ -345,6 +350,9 @@ protected:
                 io.in.buf.begin() + nRead
             );
 
+            if (Base::checkError() != 0)
+                return traits_type::eof();
+
             return nRead == 0 ? traits_type::eof()
                               : traits_type::to_int_type(*this->gptr());
         }
@@ -356,37 +364,19 @@ protected:
     // Put Area
     ////////////////////////////////////////////////////////////
 
-    // TODO: xputn can be overloaded for better efficiency
     std::streamsize
     xsputn(const char_type * str, std::streamsize n) override
     {
-        std::streamsize ret = 0;
-        while (ret < n)
+        if (n > bufSize)
         {
-            const std::streamsize buf_len = this->epptr() - this->pptr();
-            if (buf_len)
-            {
-                const std::streamsize remaining = n - ret;
-                const std::streamsize len       = std::min(buf_len, remaining);
-                traits_type::copy(this->pptr(), str, len);
-                ret += len;
-                str += len;
-                this->pbump(len);
-            }
-
-            if (ret < n)
-            {
-                int_type ch = this->overflow(traits_type::to_int_type(*str));
-                if (!traits_type::eq_int_type(ch, traits_type::eof()))
-                {
-                    ++ret;
-                    ++str;
-                }
-                else
-                    break;
-            }
+            std::streamsize wrote = Base::write(str, io.out.pos, n);
+            io.out.pos += wrote;
+            return wrote;
         }
-        return ret;
+        else
+        {
+            return Base::xsputn(str, n);
+        }
     }
 
     int_type
@@ -397,12 +387,6 @@ protected:
             size_t filled = this->pptr() - this->pbase();
             size_t wrote  = Base::write(io.out.buf.begin(), io.out.pos, filled);
             io.out.pos += wrote;
-
-            // failure needs to be handled...
-            if (wrote < filled)
-            {
-                return traits_type::eof(); // failure
-            }
 
             this->setp(
                 io.out.buf.begin(),
@@ -415,6 +399,10 @@ protected:
                 io.out.buf.front() = excess;
                 this->pbump(1);
             }
+
+            if (Base::checkError() != 0)
+                return traits_type::eof();
+
             return 0; // unspecified but eof is -1
         }
 

@@ -173,7 +173,7 @@ TEST_CASE("basic_streambuf behavior of FileBuffer", "[FileBuffer]")
         for (std::wstring str : wstrs)
         {
             size_t sz       = str.size();
-            size_t byteSize = sz * (sizeof(wchar_t) / sizeof(char));
+            size_t byteSize = sz * sizeof(wchar_t);
 
             // verifies that strings containing null still gives us the expected
             // size
