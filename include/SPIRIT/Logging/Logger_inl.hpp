@@ -35,7 +35,7 @@ namespace sp
 
 template <class Stream, class Mutex>
 template <class... Args>
-StreamSink<Stream, Mutex>::StreamSink(
+AnsiStreamSink<Stream, Mutex>::AnsiStreamSink(
     bool enableAnsi,
     std::unique_ptr<spdlog::formatter>&& formatter,
     Args &&... args
@@ -46,7 +46,7 @@ StreamSink<Stream, Mutex>::StreamSink(
 
 template <class Stream, class Mutex>
 template <class... Args>
-StreamSink<Stream, Mutex>::StreamSink(bool enableAnsi, Args &&... args)
+AnsiStreamSink<Stream, Mutex>::AnsiStreamSink(bool enableAnsi, Args &&... args)
     : BaseSink{std::make_unique<spdlog::pattern_formatter>()},
       BaseStream{enableAnsi, std::forward<Args>(args)...}
 {
@@ -54,21 +54,21 @@ StreamSink<Stream, Mutex>::StreamSink(bool enableAnsi, Args &&... args)
 
 template <class Stream, class Mutex>
 void
-StreamSink<Stream, Mutex>::setLevelColor(LogLevel lvl, LevelColor color)
+AnsiStreamSink<Stream, Mutex>::setLevelColor(LogLevel lvl, LevelColor color)
 {
     this->levelColors[lvl] = color;
 }
 
 template <class Stream, class Mutex>
 void
-StreamSink<Stream, Mutex>::flush_()
+AnsiStreamSink<Stream, Mutex>::flush_()
 {
     this->stream().flush();
 }
 
 template <class Stream, class Mutex>
 void
-StreamSink<Stream, Mutex>::sink_it_(const spdlog::details::log_msg & msg)
+AnsiStreamSink<Stream, Mutex>::sink_it_(const spdlog::details::log_msg & msg)
 {
     // mutex is locked during call to log() which calls here
     // std::lock_guard<mutex_t> lock(mutex_);
@@ -103,7 +103,7 @@ StreamSink<Stream, Mutex>::sink_it_(const spdlog::details::log_msg & msg)
 // only for TextStyle sequences, AnsiSequences need further refinement
 template <class Stream, class Mutex>
 void
-StreamSink<Stream, Mutex>::filterSequences(const char_type * start, size_t size)
+AnsiStreamSink<Stream, Mutex>::filterSequences(const char_type * start, size_t size)
 {
     constexpr char_type seqBegin = static_cast<char_type>(TextStyle::ESC);
     constexpr char_type seqEnd = static_cast<char_type>(TextStyle::end);
@@ -134,7 +134,7 @@ StreamSink<Stream, Mutex>::filterSequences(const char_type * start, size_t size)
 
 template <class Stream, class Mutex>
 void
-StreamSink<Stream, Mutex>::write(
+AnsiStreamSink<Stream, Mutex>::write(
     const spdlog::memory_buf_t & formatted,
     size_t start,
     size_t end

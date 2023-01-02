@@ -58,8 +58,8 @@ TEST_CASE("StreamSinks")
 {
     SECTION("Sequence Filtering")
     {
-        auto on  = std::make_shared<sp::StreamSink_mt<std::stringstream>>(true);
-        auto off = std::make_shared<sp::StreamSink_mt<std::stringstream>>(false);
+        auto on  = std::make_shared<sp::AnsiStreamSink_mt<std::stringstream>>(true);
+        auto off = std::make_shared<sp::AnsiStreamSink_mt<std::stringstream>>(false);
 
         spdlog::logger logger{
             "Logger",
@@ -103,7 +103,7 @@ TEST_CASE("File Sinks")
         SECTION("Pattern formatter")
         {
             auto sink
-                = std::make_shared<sp::StreamSink_mt<std::stringstream>>(false);
+                = std::make_shared<sp::AnsiStreamSink_mt<std::stringstream>>(false);
             spdlog::logger logger{"Logger", sink};
 
             // Note that spdlog adds a newline after each message
@@ -128,8 +128,8 @@ TEST_CASE("File Sinks")
 TEST_CASE("Spirit's Logger"){
     sp::LoggerPtr logger = sp::spiritLogger();
 
-    auto onSink = std::make_shared<sp::StreamSink_mt<std::stringstream>>(true);
-    auto offSink = std::make_shared<sp::StreamSink_mt<std::stringstream>>(false);
+    auto onSink = std::make_shared<sp::AnsiStreamSink_mt<std::stringstream>>(true);
+    auto offSink = std::make_shared<sp::AnsiStreamSink_mt<std::stringstream>>(false);
 
     logger->sinks().push_back(onSink);
     logger->sinks().push_back(offSink);

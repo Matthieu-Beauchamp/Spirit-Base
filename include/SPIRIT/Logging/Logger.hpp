@@ -83,17 +83,18 @@ makeLogger(const std::string & name, SinkArgs &&... args)
 
 // Returns the logger used by Spirit
 // You a free to remove/modify its sinks, format pattern, etc.
-// Note that added sinks will not share pattern, call set_pattern with 
+// Note that added sinks will not share pattern, call set_pattern with
 // spiritPattern() or your own:
 // sp::spiritLogger()->set_pattern(sp::spiritPattern());
 sp::LoggerPtr
 spiritLogger();
 
 // Get the default pattern string used by spiritLogger()
-std::string spiritPattern();
+std::string
+spiritPattern();
 
 // Convenience for streaming Messages:
-// 
+//
 // sp::spiritLog() << sp::Info("hello");
 //
 inline sp::Logger &
@@ -110,7 +111,7 @@ spiritLog()
 
 ////////////////////////////////////////////////////////////
 /// \brief Defines how the color range for a given LogLevel is displayed
-///     (see Logger, StreamSink and FileSink support color output)
+///     (see Logger, AnsiStreamSink and AnsiFileSink support color output)
 ////////////////////////////////////////////////////////////
 struct SPIRIT_API LevelColor
     : public sp::Escapes<sp::Style, sp::FgColor, sp::BgColor> // style first otherwise might reset colors
@@ -142,8 +143,8 @@ public:
 ///
 ////////////////////////////////////////////////////////////
 template <class Stream, class Mutex>
-class StreamSink : public spdlog::sinks::base_sink<Mutex>,
-                   public sp::AnsiStreamWrapper<Stream>
+class AnsiStreamSink : public spdlog::sinks::base_sink<Mutex>,
+                       public sp::AnsiStreamWrapper<Stream>
 {
     typedef spdlog::sinks::base_sink<Mutex> BaseSink;
     typedef sp::AnsiStreamWrapper<Stream> BaseStream;
@@ -158,14 +159,14 @@ public:
 
     // Args are passed to Stream constructor
     template <class... Args>
-    StreamSink(
+    AnsiStreamSink(
         bool enableAnsi,
         std::unique_ptr<spdlog::formatter> && formatter,
         Args &&... args
     );
 
     template <class... Args>
-    StreamSink(bool enableAnsi, Args &&... args);
+    AnsiStreamSink(bool enableAnsi, Args &&... args);
 
     void
     setLevelColor(LogLevel lvl, LevelColor color);
@@ -181,7 +182,7 @@ protected:
 private:
 
     // TODO: Does not account for generic sequences (ie cursor and erase)
-    // only for color and style sequences, AnsiSequences need further refinement
+    // only for TextStyle sequences, AnsiSequences need further refinement
     void
     filterSequences(const char_type * start, size_t size);
 
@@ -202,13 +203,12 @@ private:
 };
 
 template <class Stream>
-using StreamSink_st = StreamSink<Stream, spdlog::details::null_mutex>;
+using AnsiStreamSink_st = AnsiStreamSink<Stream, spdlog::details::null_mutex>;
 
 template <class Stream>
-using StreamSink_mt = StreamSink<Stream, std::mutex>;
+using AnsiStreamSink_mt = AnsiStreamSink<Stream, std::mutex>;
 
 
-// TODO: So repetitive with AnsiStream... yet cannot inherit (degenerate)
 ////////////////////////////////////////////////////////////
 /// \brief Creates an Ansi escapes aware sink that outputs to a FILE
 ///
@@ -216,9 +216,9 @@ using StreamSink_mt = StreamSink<Stream, std::mutex>;
 /// is not a terminal.
 ////////////////////////////////////////////////////////////
 template <class Mutex>
-class FileSink : public StreamSink<std::ostream, Mutex>
+class AnsiFileSink : public AnsiStreamSink<sp::AnsiFileStream, Mutex>
 {
-    typedef sp::StreamSink<std::ostream, Mutex> BaseSink;
+    typedef AnsiStreamSink<sp::AnsiFileStream, Mutex> BaseSink;
 
 public:
 
@@ -228,54 +228,23 @@ public:
     typedef typename BaseSink::off_type off_type;
     typedef typename BaseSink::traits_type traits_type;
 
-    // TODO: Remove the enum from class, it is repeated with the AnsiStream. Poorly named
-    enum sequenceMode
-    {
-        always,
-        automatic,
-        never
-    };
-
-    FileSink(FILE * file, sequenceMode mode = automatic)
-        : FileSink{file, std::make_unique<spdlog::pattern_formatter>(), mode}
+    AnsiFileSink(FILE * file, ansiMode mode = ansiMode::automatic)
+        : AnsiFileSink{file, std::make_unique<spdlog::pattern_formatter>(), mode}
     {
     }
 
-    FileSink(
+    AnsiFileSink(
         FILE * file,
         std::unique_ptr<spdlog::formatter> && formatter,
-        sequenceMode mode
+        ansiMode mode = ansiMode::automatic
     )
-        : BaseSink{false, std::move(formatter), std::addressof(fileBuf)},
-          fileBuf{file}
+        : BaseSink{false, std::move(formatter), file, mode}
     {
-        changeSequenceMode(mode);
-    }
-
-    [[nodiscard]] FILE *
-    file() const
-    {
-        return fileBuf.file();
-    }
-
-private:
-
-    sp::details::OutFileBuf fileBuf;
-
-    void
-    changeSequenceMode(sequenceMode mode)
-    {
-        switch (mode)
-        {
-        case always: this->enableAnsi(true); return;
-        case never: this->enableAnsi(false); return;
-        case automatic: this->enableAnsi(supportsAnsi(fileBuf.file())); return;
-        }
     }
 };
 
-typedef FileSink<spdlog::details::null_mutex> FileSink_st;
-typedef FileSink<std::mutex> FileSink_mt;
+using FileSink_st = AnsiFileSink<spdlog::details::null_mutex>;
+using FileSink_mt = AnsiFileSink<std::mutex>;
 
 } // namespace sp
 

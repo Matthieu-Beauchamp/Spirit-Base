@@ -37,6 +37,8 @@
 namespace sp
 {
 
+// TODO: when we complete the check for Wrapped streams, 
+//  some types may already be NoRedirect, 
 template <class StreamType>
 class NoRedirect : public StreamType
 {
@@ -51,29 +53,86 @@ public:
     using StreamType::StreamType;
 
 private:
+
     using StreamType::rdbuf;
 };
 
 
-////////////////////////////////////////////////////////////
-/// It is necessary that we do not inherit from ostream
-/// since it causes ambiguous overload resolutions for operator<<.
-/// Furthermore, since our AnsiSequences rely on being detected by
-/// a stream which knows whether or not it supports them, they always output when
-/// their overloaded operator<< is called.
-/// This means that when the inherited operator<< is called, an ostream& is
-/// returned and every subsequent AnsiEscape is passed without regards to the ansiStream.
-////////////////////////////////////////////////////////////
-
-
-// Usage is intended to create stringstreams which will behave according to
-//  an AnsiStream's escape sequences support.
-// ie AnsiStream::makeStream<std::stringstream>(std::stringstream{}) -> AnsiStreamWrapper
-template <class StreamType> //,
-                            //   std::enable_if_t<sp::traits::isStream<StreamType>::value, bool> = true>
-class AnsiStreamWrapper
+enum class ansiMode
 {
-    typedef StreamType & (*Manipulator)(StreamType &);
+    always,
+    automatic,
+    never
+};
+
+namespace details
+{
+
+class FileStream : public std::ostream
+{
+public:
+
+    FileStream(FILE * file, sp::ansiMode mode = sp::ansiMode::automatic)
+        : fileBuf{file}, std::ostream{&fileBuf}
+    {
+    }
+
+    [[nodiscard]] FILE *
+    file() const
+    {
+        return fileBuf.file();
+    }
+
+
+private:
+
+    sp::details::OutFileBuf fileBuf;
+};
+
+} // namespace details
+
+
+////////////////////////////////////////////////////////////
+// We cannot inherit from ostream since it causes ambiguous
+// overload resolutions for operator<<.
+//
+// Furthermore, since our AnsiSequences rely on being detected by
+// a stream which knows whether or not it supports them, they always output when
+// their overloaded operator<< is called with an ostream.
+// This means that when the inherited operator<< is called, an ostream& is
+// returned and every subsequent  << AnsiEscape is passed without regards to
+// wether the stream accepts ansi escapes.
+////////////////////////////////////////////////////////////
+
+// TODO: Static assert is a stream
+template <class StreamType, class = void>
+class AnsiStreamWrapper : public StreamType
+{
+    // This class inherits from a previously wrapped stream
+    // this happens for sp::AnsiFileSink.
+    // ansi will be enabled/disabled in parent
+public:
+
+    AnsiStreamWrapper(bool, StreamType && inner)
+        : StreamType{inner}
+    {
+    }
+
+    template <class... Args>
+    AnsiStreamWrapper(bool, Args &&... args)
+        : StreamType{std::forward<Args>(args)...}
+    {
+    }
+};
+
+// passed throught NoRedirect -> already wrapped
+// TODO: This check is incomplete
+template <class StreamType>
+class AnsiStreamWrapper<
+    StreamType,
+    sp::traits::void_t<decltype(std::declval<StreamType &>().rdbuf())>>
+{
+    typedef std::ostream & (*Manipulator)(std::ostream &);
     typedef NoRedirect<StreamType> InnerStream;
 
 public:
@@ -84,7 +143,7 @@ public:
     typedef typename StreamType::off_type off_type;
     typedef typename StreamType::traits_type traits_type;
 
-    AnsiStreamWrapper(InnerStream && inner, bool enableAnsi = false)
+    AnsiStreamWrapper(bool enableAnsi, InnerStream && inner)
         : inner{inner}, areSequencesEnabled{enableAnsi}
     {
     }
@@ -95,21 +154,11 @@ public:
     {
     }
 
+    // Move are not implemented since streams are not typically movable
+    // (ie ostreams does not define moves, but stringstream does)
 
     ~AnsiStreamWrapper() = default;
 
-    // TODO: Only if StreamType is movable, can't use enable if...
-    // AnsiStreamWrapper(AnsiStreamWrapper && other) { *this = std::move(other); }
-    // AnsiStreamWrapper &
-    // operator=(AnsiStreamWrapper && other)
-    // {
-    //     std::swap(
-    //         static_cast<StreamType &>(inner),
-    //         static_cast<StreamType &>(other.inner)
-    //     );
-    //     areSequencesEnabled = other.areSequencesEnabled;
-    //     return *this;
-    // }
 
     // Allows access to stream specific behavior,
     // cannot prevent users from changing the streambuf...
@@ -131,6 +180,12 @@ public:
         return std::addressof(inner);
     }
 
+    const InnerStream *
+    operator->() const
+    {
+        return std::addressof(inner);
+    }
+
     bool
     isAnsiEnabled() const
     {
@@ -147,7 +202,7 @@ public:
     friend AnsiStreamWrapper &
     operator<<(AnsiStreamWrapper & stream, T && seq)
     {
-        if (stream.areSequencesEnabled)
+        if (stream.isAnsiEnabled())
             stream.stream() << seq;
 
         return stream;
@@ -174,32 +229,23 @@ private:
 
     // We don't use a reference since these may go bad.
     // Also this is intended as a new stream class, not one which
-    // modifies to behavior of an existing stream object
+    // modifies to behavior of an *existing stream object*
+    // (Nuance being that we construct a new stream)
     InnerStream inner;
 };
-
-
-template <class StreamType, class... Args>
-auto
-makeAnsiAwareStream(bool ansiEnabled, Args &&... args)
-{
-    typedef sp::AnsiStreamWrapper<StreamType> WrappedStream;
-
-    return WrappedStream{ansiEnabled, std::forward<Args>(args)...};
-}
 
 
 bool
 supportsAnsi(FILE * file);
 
-
 // TODO: Provide a way to make it streams unbuffered (sync with stdio)
 // TODO: template<charType>
 // TODO: Input sequences..? https://en.wikipedia.org/wiki/ANSI_escape_code#Terminal_input_sequences
-class SPIRIT_API AnsiStream : public sp::AnsiStreamWrapper<std::ostream>
+class SPIRIT_API AnsiFileStream
+    : public sp::AnsiStreamWrapper<sp::details::FileStream>
 {
-    typedef sp::AnsiStreamWrapper<std::ostream> Wrapper;
-    typedef std::ostream StreamType;
+    typedef sp::details::FileStream StreamType;
+    typedef sp::AnsiStreamWrapper<StreamType> Wrapper;
 
 public:
 
@@ -209,69 +255,31 @@ public:
     typedef typename Wrapper::off_type off_type;
     typedef typename Wrapper::traits_type traits_type;
 
-
-    enum sequenceMode
-    {
-        always,
-        automatic,
-        never
-    };
-
-    AnsiStream(FILE * file, sequenceMode mode = automatic)
-        : Wrapper{false, std::addressof(fileBuf)}, fileBuf{file}
+    AnsiFileStream(FILE * file, ansiMode mode = ansiMode::automatic)
+        : Wrapper{false, file}
     {
         changeSequenceMode(mode);
     }
 
-    // See AnsiStreamWrapper
-    // AnsiStream(AnsiStream && other, sequenceMode mode = automatic)
-    //     : Wrapper{static_cast<Wrapper &&>(other)}, fileBuf{other.file()}
-    // {
-    //     changeSequenceMode(mode);
-    // }
-
-    ~AnsiStream() = default;
-
-    [[nodiscard]] FILE *
-    file() const
-    {
-        return fileBuf.file();
-    }
-
-    template <class ChildStreamType, class... Args>
-    [[nodiscard]] auto
-    makeAnsiChildStream(Args &&... args) const
-    {
-        return makeAnsiAwareStream<ChildStreamType>(
-            isAnsiEnabled(),
-            std::forward<Args>(args)...
-        );
-    }
-
-    [[nodiscard]] auto
-    makeStringStream() const
-    {
-        return makeAnsiChildStream<std::stringstream>();
-    }
 
 private:
 
-    sp::details::OutFileBuf fileBuf;
-
     void
-    changeSequenceMode(sequenceMode mode)
+    changeSequenceMode(ansiMode mode)
     {
         switch (mode)
         {
-        case always: enableAnsi(true); return;
-        case never: enableAnsi(false); return;
-        case automatic: enableAnsi(supportsAnsi(fileBuf.file())); return;
+            case ansiMode::always: enableAnsi(true); return;
+            case ansiMode::never: enableAnsi(false); return;
+            case ansiMode::automatic:
+                enableAnsi(supportsAnsi(this->stream().file()));
+                return;
         }
     }
 };
 
-extern SPIRIT_API sp::AnsiStream ansiOut;
-extern SPIRIT_API sp::AnsiStream ansiErr;
+extern SPIRIT_API sp::AnsiFileStream ansiOut;
+extern SPIRIT_API sp::AnsiFileStream ansiErr;
 
 
 } // namespace sp

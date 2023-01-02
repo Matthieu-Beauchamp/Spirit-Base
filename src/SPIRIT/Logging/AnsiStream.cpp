@@ -34,8 +34,8 @@
 namespace sp
 {
 
-sp::AnsiStream ansiOut{stdout};
-sp::AnsiStream ansiErr{stderr};
+sp::AnsiFileStream ansiOut{stdout};
+sp::AnsiFileStream ansiErr{stderr};
 
 
 // TODO: Does not check for given file!

@@ -20,7 +20,8 @@ struct NotPrintable
 };
 
 // TODO: Input is never tested
-// TODO: Printable and isStream concept checks
+// TODO: Many tests using "child" stringstream were removed, 
+//      now very little is tested here.
 
 TEST_CASE("Ansi Stream on connex classes")
 {
@@ -28,7 +29,7 @@ TEST_CASE("Ansi Stream on connex classes")
     {
         SECTION("isStream")
         {
-            REQUIRE(sp::traits::isStream<sp::AnsiStream>::value);
+            REQUIRE(sp::traits::isStream<sp::AnsiFileStream>::value);
             REQUIRE(sp::traits::isStream<sp::AnsiStreamWrapper<std::ostream>>::value);
             REQUIRE(sp::traits::isStream<sp::AnsiStreamWrapper<std::stringstream>>::value);
 
@@ -62,62 +63,31 @@ TEST_CASE("Ansi Stream on connex classes")
         }
     }
 
-
     SECTION("Ansi Stream construction")
     {
-        sp::AnsiStream original{stdout};
-        auto f           = original.file();
+        sp::AnsiFileStream original{stdout};
+        auto f           = original.stream().file();
         bool ansiEnabled = original.isAnsiEnabled();
         REQUIRE(f != nullptr);
 
         // Move constructor was disabled, standard ostreams differ too much to generalize it
-        // sp::AnsiStream last{std::move(original)};
+        // sp::AnsiFileStream last{std::move(original)};
         // REQUIRE(last.file() == f);
         // REQUIRE(last.isAnsiEnabled() == ansiEnabled);
     }
 
-    SECTION("Child Streams")
-    {
-        sp::AnsiStream on{stdout, sp::AnsiStream::always};
-        sp::AnsiStream off{stdout, sp::AnsiStream::never};
-
-        // Child streams
-        auto ss1 = on.makeStringStream();
-        auto ss2 = off.makeStringStream();
-
-        std::stringstream expectedOn{};
-        expectedOn << sp::red << "hello";
-        std::stringstream expectedOff{};
-        expectedOff << "world";
-
-        ss1 << sp::red << "hello";
-        ss2 << "world";
-
-        // note that they also use the .stream() or operator-> to access the
-        // underlying stream
-        REQUIRE(ss1->str() == expectedOn.str());
-        REQUIRE(ss2->str() == expectedOff.str());
-    }
-
-
     SECTION("Class Interface")
     {
-        sp::AnsiStream out{stdout};
+        sp::AnsiFileStream out{stdout};
 
         bool allowsSequences = out.isAnsiEnabled();
-        auto childStream     = out.makeStringStream();
-
-        // AnsiStream can create stream which will enable/disable
-        // AnsiEscape according to the AnsiStream's status
-        // (ie is in terminal and colors are supported)
-        REQUIRE(childStream.isAnsiEnabled() == allowsSequences);
 
         // Equivalent access to the underlying stream, operator-> is given as
         // a shorthand since we could not implement the interface using inheritance.
         REQUIRE(&out.stream() == out.operator->());
 
-        // Same as above, outPtr-> does not jump to underlying stream, points to AnsiStream.
-        sp::AnsiStream * outPtr = &out;
+        // Same as above, outPtr-> does not jump to underlying stream, points to AnsiFileStream.
+        sp::AnsiFileStream * outPtr = &out;
         REQUIRE(&outPtr->stream() == outPtr->operator->());
 
         // Should not compile, we want to block redirections since
@@ -128,39 +98,6 @@ TEST_CASE("Ansi Stream on connex classes")
         // REQUIRE(out.stream().rdbuf());
         // REQUIRE(out->rdbuf());
     }
-
-    SECTION("Ansi stringstream")
-    {
-        SECTION("With Ansi")
-        {
-            // TODO: Static method for building those without creating an
-            // AnsiStream would be useful
-            sp::AnsiStream EscapeOn{stdout, sp::AnsiStream::always};
-            auto ansiSs = EscapeOn.makeStringStream();
-            std::stringstream ss{};
-
-            // normal streams always receive sequences
-            ansiSs << sp::red << "hello " << 1.0 << sp::reset;
-            ss << sp::red << "hello " << 1.0 << sp::reset;
-
-            REQUIRE(ansiSs->str() == ss.str());
-        }
-
-        SECTION("No Ansi")
-        {
-            // TODO: Static method for building those without creating an
-            // AnsiStream would be useful
-            sp::AnsiStream EscapeOff{stdout, sp::AnsiStream::never};
-            auto noAnsi = EscapeOff.makeStringStream();
-            std::stringstream ss{};
-
-            noAnsi << sp::red << "hello" << sp::onBlack << sp::italic << "!";
-            ss << "hello!";
-
-            REQUIRE(noAnsi.stream().str() == ss.str());
-        }
-    }
-
 
     SECTION("ansiOut")
     {

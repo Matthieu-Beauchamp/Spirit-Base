@@ -47,9 +47,9 @@ namespace sp
 /// Terminal capabilities are not queried at the time of this writing.
 /// The operator<< of AnsiSequences will always output its sequence to the
 /// stream. To ensure that you are not writing these sequences to a text file,
-/// use the AnsiStream class which will determine if escapes should be ignored.
+/// use the AnsiFileStream class which will determine if escapes should be ignored.
 /// For c++ streams, this is impossible to determine reliably, you will need
-/// to specified it to the constructor of the AnsiStream.
+/// to specified it to the constructor of the AnsiFileStream.
 ///
 /// Note that the equivalent AnsiStreams of cout and cerr are provided which
 /// cannot be redirected (which is one of the reason why it is impossible
