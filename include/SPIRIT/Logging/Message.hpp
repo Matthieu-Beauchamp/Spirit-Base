@@ -81,13 +81,13 @@ public:
 
     ~MessageBase() = default;
 
-    const std::string &
+    [[nodiscard]] const std::string &
     str() const
     {
         return msg;
     }
 
-    const SourceLocation &
+    [[nodiscard]] const SourceLocation &
     sourceLoc() const
     {
         return loc;
@@ -165,27 +165,7 @@ public:
     }
 };
 
-////////////////////////////////////////////////////////////
-// Deduction Guide, see
-// https://www.cppstories.com/2021/non-terminal-variadic-args/
-// https://en.cppreference.com/w/cpp/language/class_template_argument_deduction
-//
-// ex:
-// using Source = std::experimental::source_location;
-// template <typename... Ts>
-// struct Log
-// {
-//     Log(Ts &&... ts, const Source & loc = Source::current())
-//     {
-//         std::cout << loc.function_name() << " line " << loc.line() << ": ";
-//         ((std::cout << std::forward<Ts>(ts) << " "), ...);
-//         std::cout << '\n';
-//     }
-// };
-//
-// template <typename... Ts>
-// Log(Ts &&...) -> Log<Ts...>;
-//
+// Deduction Guides
 template <LogLevel lvl>
 Message() -> Message<lvl>;
 

@@ -71,6 +71,8 @@ using Critical = details::Message<LogLevel::critical, Args...>;
 using Logger    = spdlog::logger;
 using LoggerPtr = std::shared_ptr<sp::Logger>;
 
+sp::LoggerPtr
+makeLogger(const std::string & name);
 
 template <class Sink, class... SinkArgs>
 sp::LoggerPtr
@@ -79,29 +81,24 @@ makeLogger(const std::string & name, SinkArgs &&... args)
     return spdlog::create<Sink>(name, std::forward<SinkArgs>(args)...);
 }
 
-sp::LoggerPtr
-makeLogger(const std::string & name);
-
-
-// TODO: Free functions for convenience...
+// Get the default pattern string used by spiritLogger()
+[[nodiscard]] std::string
+spiritPattern();
 
 // Returns the logger used by Spirit
 // You a free to remove/modify its sinks, format pattern, etc.
 // Note that added sinks will not share pattern, call set_pattern with
 // spiritPattern() or your own:
 // sp::spiritLogger()->set_pattern(sp::spiritPattern());
-sp::LoggerPtr
+[[nodiscard]] sp::LoggerPtr
 spiritLogger();
 
-// Get the default pattern string used by spiritLogger()
-std::string
-spiritPattern();
 
 // Convenience for streaming Messages:
 //
 // sp::spiritLog() << sp::Info("hello");
 //
-inline sp::Logger &
+[[nodiscard]] inline sp::Logger &
 spiritLog()
 {
     return *sp::spiritLogger();

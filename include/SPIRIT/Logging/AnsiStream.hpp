@@ -111,31 +111,31 @@ public:
 
     // Allows access to stream specific behavior,
     // cannot prevent users from changing the streambuf...
-    InnerStream &
+    [[nodiscard]] InnerStream &
     stream()
     {
         return inner;
     }
 
-    const InnerStream &
+    [[nodiscard]] const InnerStream &
     stream() const
     {
         return inner;
     }
 
-    InnerStream *
+    [[nodiscard]] InnerStream *
     operator->()
     {
         return std::addressof(inner);
     }
 
-    const InnerStream *
+    [[nodiscard]] const InnerStream *
     operator->() const
     {
         return std::addressof(inner);
     }
 
-    bool
+    [[nodiscard]] bool
     isAnsiEnabled() const
     {
         return areSequencesEnabled;
@@ -206,7 +206,7 @@ using AnsiWrapped_t = typename AnsiWrap<Stream>::Wrapped;
 } // namespace traits
 
 
-bool
+[[nodiscard]] bool
 supportsAnsi(FILE * file);
 
 enum class ansiMode
@@ -233,7 +233,8 @@ public:
     typedef typename Wrapper::off_type off_type;
     typedef typename Wrapper::traits_type traits_type;
 
-    // Required when "double wrapping"
+    // Required when "double wrapping",
+    // bool catches the enableAnsi parameter
     AnsiFileStream(bool, FILE * file, ansiMode mode = ansiMode::automatic)
         : AnsiFileStream{file, mode}
     {
