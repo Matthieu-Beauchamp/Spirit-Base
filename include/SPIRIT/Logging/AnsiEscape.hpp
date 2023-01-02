@@ -38,7 +38,21 @@ namespace sp
 {
 
 ////////////////////////////////////////////////////////////
-// Utility, all AnsiAnscapes are convertible to str
+/// \ingroup Logging
+/// \defgroup AnsiEscapes AnsiEscapes
+/// \brief ansi escapes are printables terminal commands
+/// 
+/// They allow control the style of outputting text as well 
+/// as performing more generic terminal control 
+/// (like written over a previously written line).
+/// 
+////////////////////////////////////////////////////////////
+
+
+////////////////////////////////////////////////////////////
+/// \ingroup AnsiEscapes
+/// \brief Converts any AnsiEscape to a string
+/// 
 ////////////////////////////////////////////////////////////
 template <class Esc, std::enable_if_t<sp::traits::isAnsiEscape<Esc>::value, bool> = true>
 std::string
@@ -48,18 +62,22 @@ toStr(Esc && esc)
 }
 
 ////////////////////////////////////////////////////////////
-// Aggregate / combined escapes
+/// \ingroup AnsiEscapes
+/// \brief Combines multiples AnsiEscape together
+/// 
+/// When streamed, the contained escapes are streamed in the order they
+/// are given in the constructor.
+/// 
+/// The escape type will properly be detected as AnsiEscape, TextStyle
+/// or TerminalControl according to the escapes it contains.
+/// 
 ////////////////////////////////////////////////////////////
-
 template <class... Args>
 class Escapes : traits::EscapeType<Args...>, public std::tuple<Args...>
 {
 public:
 
     using std::tuple<Args...>::tuple;
-    // constexpr Escapes(Args &&... args) : std::tuple<Args...>{std::forward<Args>(args)...}
-    // {
-    // }
 
     friend std::ostream &
     operator<<(std::ostream & os, const Escapes & e)
@@ -73,12 +91,24 @@ template <class... Args>
 Escapes(Args &&...) -> Escapes<Args...>;
 
 
+
 ////////////////////////////////////////////////////////////
-// Colors
+/// \ingroup AnsiEscapes
+/// \defgroup TextStyles TextStyles
+/// \brief Subset of ansi escapes that defines the style of outputted text
+/// \{
 ////////////////////////////////////////////////////////////
 
-
+////////////////////////////////////////////////////////////
+/// \brief Defines a foreground (text) color
+/// 
+////////////////////////////////////////////////////////////
 SPIRIT_API typedef details::AnsiColor<details::ansiColorTarget::text> FgColor;
+
+////////////////////////////////////////////////////////////
+/// \brief Defines a background color
+/// 
+////////////////////////////////////////////////////////////
 SPIRIT_API typedef details::AnsiColor<details::ansiColorTarget::background> BgColor;
 
 constexpr FgColor black{FgColor::black};
@@ -102,6 +132,12 @@ constexpr BgColor onWhite{BgColor::white};
 constexpr BgColor onDefault{BgColor::defaultCol};
 
 
+////////////////////////////////////////////////////////////
+/// \brief Defines a color with Rgb codes
+/// 
+/// This is less widely supported than the predefined FgColor and BgColor
+/// 
+////////////////////////////////////////////////////////////
 template <details::ansiColorTarget t>
 class RgbColor : public details::AnsiRgbColor<t>
 {
@@ -119,11 +155,13 @@ public:
     }
 };
 
-
 SPIRIT_API typedef RgbColor<details::ansiColorTarget::text> RgbFgColor;
 SPIRIT_API typedef RgbColor<details::ansiColorTarget::background> RgbBgColor;
 
-
+////////////////////////////////////////////////////////////
+/// \brief Uses RgbColor to apply a color gradient to text
+/// 
+////////////////////////////////////////////////////////////
 template <details::ansiColorTarget t>
 class Gradient : public details::AnsiGradient<t>
 {
@@ -151,9 +189,9 @@ SPIRIT_API typedef Gradient<details::ansiColorTarget::background> BgGradient;
 
 
 ////////////////////////////////////////////////////////////
-// Style
+/// \brief Styles text output
+/// 
 ////////////////////////////////////////////////////////////
-
 SPIRIT_API typedef details::AnsiStyle Style;
 
 constexpr Style reset{Style::reset};
@@ -167,9 +205,14 @@ constexpr Style swapColors{Style::swapColors};
 constexpr Style conceal{Style::conceal};
 constexpr Style crossed{Style::crossed};
 
+/// \}
+
 
 ////////////////////////////////////////////////////////////
-// Generic Sequences
+/// \ingroup AnsiEscapes
+/// \defgroup TerminalControls TerminalControls
+/// \brief Ansi Sequences for generic terminal commands
+/// \{
 ////////////////////////////////////////////////////////////
 
 SPIRIT_API typedef details::AsciiCode<'\a'> Bell;
@@ -178,9 +221,9 @@ SPIRIT_API typedef details::AsciiCode<'\r'> CarriageRet;
 
 
 ////////////////////////////////////////////////////////////
-// Absolute cursor movement
+/// \brief Absolute movement of the cursor
+/// TODO: Detail behavior
 ////////////////////////////////////////////////////////////
-
 class MoveCursorTo : public details::CursorMoveAbs
 {
 public:
@@ -200,9 +243,9 @@ public:
 
 
 ////////////////////////////////////////////////////////////
-// Relative cursor movement
+/// \brief Relative movement of the cursor
+/// 
 ////////////////////////////////////////////////////////////
-
 template <char sym>
 class MoveCursor : public details::CursorMoveRel<sym>
 {
@@ -226,14 +269,21 @@ SPIRIT_API typedef MoveCursor<'G'> CursorToColumn;
 
 
 ////////////////////////////////////////////////////////////
-// Erasing
+/// \brief Erasing functionnality
+/// 
+/// used with carriage return, allows overwritting lines,
+/// see AnsiCodes.cpp in examples.
+/// 
 ////////////////////////////////////////////////////////////
+template <int num, char sym>
+using Erase = details::Erase<num, sym>;
 
-typedef details::Erase<2, 'J'> EraseScreen;
-typedef details::Erase<0, 'K'> EraseCursorToEndLine;
-typedef details::Erase<1, 'K'> EraseStartLineToCursor;
-typedef details::Erase<2, 'K'> EraseLine;
+typedef Erase<2, 'J'> EraseScreen;
+typedef Erase<0, 'K'> EraseCursorToEndLine;
+typedef Erase<1, 'K'> EraseStartLineToCursor;
+typedef Erase<2, 'K'> EraseLine;
 
+/// \}
 
 } // namespace sp
 

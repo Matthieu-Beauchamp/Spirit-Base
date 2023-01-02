@@ -23,33 +23,31 @@
 ////////////////////////////////////////////////////////////
 
 
-#ifndef SPIRIT_BASE_HPP
-#define SPIRIT_BASE_HPP
-
+#ifndef SPIRIT_LOGGING_HPP
+#define SPIRIT_LOGGING_HPP
 
 ////////////////////////////////////////////////////////////
-/// \defgroup Base Base
+/// \ingroup Base
+/// \defgroup Logging Logging
+/// \brief Logging facilities for Spirit modules (and users)
 ///
-/// \brief Base module of the Spirit library
-/// 
-/// The Base module contains the basic faciliities on which 
-/// Spirit relies across all modules.
+/// Wraps around spdlog's library, notably providing ansi escapes
+/// aware streams and sinks. This allows for output to be colored only
+/// when the receiving FILE is a color terminal.
+/// Streamable Message objects are also provided. They contain source location
+/// information and can be streamed to loggers. This avoids the need for
+/// logging macros.
 ///
-/// For users, the Configuration module is the most relevant.
-/// 
-/// Users may also wish to use the Ansi aware Logging facilities
-/// for colored output (and more).
-/// 
+/// for more information about spdlog, you may wish to refer to
+/// https://github.com/gabime/spdlog/wiki
+///
 ////////////////////////////////////////////////////////////
 
+#include "AnsiEscape.hpp"
+#include "AnsiStream.hpp"
 
-#include "Configuration/config.hpp"
+#include "Format.hpp"
+#include "Message.hpp"
+#include "Logger.hpp"
 
-#include "Logging/Logging.hpp"
-
-// include utils?
-
-#include "Error/Error.hpp"
-
-
-#endif // SPIRIT_BASE_HPP
+#endif // SPIRIT_LOGGING_HPP

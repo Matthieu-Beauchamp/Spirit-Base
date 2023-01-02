@@ -20,7 +20,7 @@ struct NotPrintable
 };
 
 // TODO: Input is never tested
-// TODO: Many tests using "child" stringstream were removed, 
+// TODO: Many tests using "child" stringstream were removed,
 //      now very little is tested here.
 
 TEST_CASE("Ansi Stream on connex classes")
@@ -30,8 +30,12 @@ TEST_CASE("Ansi Stream on connex classes")
         SECTION("isStream")
         {
             REQUIRE(sp::traits::isStream<sp::AnsiFileStream>::value);
-            REQUIRE(sp::traits::isStream<sp::AnsiStreamWrapper<std::ostream>>::value);
-            REQUIRE(sp::traits::isStream<sp::AnsiStreamWrapper<std::stringstream>>::value);
+            REQUIRE(
+                sp::traits::isStream<sp::AnsiStreamWrapper<std::ostream>>::value
+            );
+            REQUIRE(
+                sp::traits::isStream<sp::AnsiStreamWrapper<std::stringstream>>::value
+            );
 
             REQUIRE(sp::traits::isStream<std::ostream>::value);
             REQUIRE(sp::traits::isStream<std::basic_iostream<char>>::value);
@@ -61,6 +65,18 @@ TEST_CASE("Ansi Stream on connex classes")
             REQUIRE_FALSE(sp::traits::Printable<const NotPrintable &>::value);
             REQUIRE_FALSE(sp::traits::Printable<const std::ostream &>::value);
         }
+
+        SECTION("Wrapped type")
+        {
+            REQUIRE(std::is_same<
+                    sp::traits::AnsiWrapped_t<std::ostream>,
+                    sp::AnsiStreamWrapper<std::ostream>>::value);
+
+            // does not wrap twice
+            REQUIRE(std::is_same<
+                    sp::traits::AnsiWrapped_t<sp::AnsiStreamWrapper<std::ostream>>,
+                    sp::AnsiStreamWrapper<std::ostream>>::value);
+        }
     }
 
     SECTION("Ansi Stream construction")
@@ -70,10 +86,9 @@ TEST_CASE("Ansi Stream on connex classes")
         bool ansiEnabled = original.isAnsiEnabled();
         REQUIRE(f != nullptr);
 
-        // Move constructor was disabled, standard ostreams differ too much to generalize it
-        // sp::AnsiFileStream last{std::move(original)};
-        // REQUIRE(last.file() == f);
-        // REQUIRE(last.isAnsiEnabled() == ansiEnabled);
+        // Move constructor was disabled, standard ostreams differ too much to
+        // generalize it sp::AnsiFileStream last{std::move(original)}; REQUIRE(last.file()
+        // == f); REQUIRE(last.isAnsiEnabled() == ansiEnabled);
     }
 
     SECTION("Class Interface")

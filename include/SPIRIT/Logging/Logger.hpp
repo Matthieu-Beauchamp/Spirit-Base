@@ -66,8 +66,6 @@ using Critical = details::Message<LogLevel::critical, Args...>;
 
 ////////////////////////////////////////////////////////////
 // wrapping spdlog
-//
-// for more details see https://github.com/gabime/spdlog/wiki
 ////////////////////////////////////////////////////////////
 
 using Logger    = spdlog::logger;
@@ -150,10 +148,10 @@ public:
 ////////////////////////////////////////////////////////////
 template <class Stream, class Mutex>
 class AnsiStreamSink : public spdlog::sinks::base_sink<Mutex>,
-                       public sp::AnsiStreamWrapper<Stream>
+                       public sp::traits::AnsiWrapped_t<Stream>
 {
     typedef spdlog::sinks::base_sink<Mutex> BaseSink;
-    typedef sp::AnsiStreamWrapper<Stream> BaseStream;
+    typedef sp::traits::AnsiWrapped_t<Stream> BaseStream;
 
 public:
 

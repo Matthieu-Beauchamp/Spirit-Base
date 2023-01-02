@@ -37,33 +37,6 @@
 namespace sp
 {
 
-// TODO: when we complete the check for Wrapped streams, 
-//  some types may already be NoRedirect, 
-template <class StreamType>
-class NoRedirect : public StreamType
-{
-public:
-
-    typedef typename StreamType::char_type char_type;
-    typedef typename StreamType::int_type int_type;
-    typedef typename StreamType::pos_type pos_type;
-    typedef typename StreamType::off_type off_type;
-    typedef typename StreamType::traits_type traits_type;
-
-    using StreamType::StreamType;
-
-private:
-
-    using StreamType::rdbuf;
-};
-
-
-enum class ansiMode
-{
-    always,
-    automatic,
-    never
-};
 
 namespace details
 {
@@ -72,10 +45,7 @@ class FileStream : public std::ostream
 {
 public:
 
-    FileStream(FILE * file, sp::ansiMode mode = sp::ansiMode::automatic)
-        : fileBuf{file}, std::ostream{&fileBuf}
-    {
-    }
+    FileStream(FILE * file) : fileBuf{file}, std::ostream{&fileBuf} {}
 
     [[nodiscard]] FILE *
     file() const
@@ -85,6 +55,9 @@ public:
 
 
 private:
+
+    // prevent redirection
+    using std::ostream::rdbuf;
 
     sp::details::OutFileBuf fileBuf;
 };
@@ -104,36 +77,12 @@ private:
 // wether the stream accepts ansi escapes.
 ////////////////////////////////////////////////////////////
 
-// TODO: Static assert is a stream
-template <class StreamType, class = void>
-class AnsiStreamWrapper : public StreamType
-{
-    // This class inherits from a previously wrapped stream
-    // this happens for sp::AnsiFileSink.
-    // ansi will be enabled/disabled in parent
-public:
 
-    AnsiStreamWrapper(bool, StreamType && inner)
-        : StreamType{inner}
-    {
-    }
-
-    template <class... Args>
-    AnsiStreamWrapper(bool, Args &&... args)
-        : StreamType{std::forward<Args>(args)...}
-    {
-    }
-};
-
-// passed throught NoRedirect -> already wrapped
-// TODO: This check is incomplete
 template <class StreamType>
-class AnsiStreamWrapper<
-    StreamType,
-    sp::traits::void_t<decltype(std::declval<StreamType &>().rdbuf())>>
+class AnsiStreamWrapper
 {
     typedef std::ostream & (*Manipulator)(std::ostream &);
-    typedef NoRedirect<StreamType> InnerStream;
+    typedef StreamType InnerStream;
 
 public:
 
@@ -235,8 +184,37 @@ private:
 };
 
 
+namespace traits
+{
+// TODO: TEST
+
+template <class Stream, class = void>
+struct AnsiWrap
+{
+    typedef sp::AnsiStreamWrapper<Stream> Wrapped;
+};
+
+template <class Stream>
+struct AnsiWrap<Stream, sp::traits::void_t<decltype(std::declval<Stream>().stream())>>
+{
+    typedef Stream Wrapped;
+};
+
+template <class Stream>
+using AnsiWrapped_t = typename AnsiWrap<Stream>::Wrapped;
+
+} // namespace traits
+
+
 bool
 supportsAnsi(FILE * file);
+
+enum class ansiMode
+{
+    always,
+    automatic,
+    never
+};
 
 // TODO: Provide a way to make it streams unbuffered (sync with stdio)
 // TODO: template<charType>
@@ -254,6 +232,12 @@ public:
     typedef typename Wrapper::pos_type pos_type;
     typedef typename Wrapper::off_type off_type;
     typedef typename Wrapper::traits_type traits_type;
+
+    // Required when "double wrapping"
+    AnsiFileStream(bool, FILE * file, ansiMode mode = ansiMode::automatic)
+        : AnsiFileStream{file, mode}
+    {
+    }
 
     AnsiFileStream(FILE * file, ansiMode mode = ansiMode::automatic)
         : Wrapper{false, file}
