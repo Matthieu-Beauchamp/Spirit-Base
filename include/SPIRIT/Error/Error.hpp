@@ -25,9 +25,8 @@
 #ifndef SPIRIT_ENGINE_ERROR_HPP
 #define SPIRIT_ENGINE_ERROR_HPP
 
-#include "SPIRIT/Logging/Format.hpp"
-#include "SPIRIT/Logging/Logger.hpp"
 #include "SPIRIT/config.hpp"
+#include "SPIRIT/Logging/Format.hpp"
 
 #include <exception>
 
@@ -113,25 +112,13 @@ class SPIRIT_API AssertionError : public SpiritError
 
 ////////////////////////////////////////////////////////////
 /// \ingroup Errors
-/// \brief Logs a warning when Condition is false, other params are passed to sp::format
-///
-////////////////////////////////////////////////////////////
-#define SPIRIT_CHECK(COND, ...)                                                \
-    if (!(COND))                                                               \
-    {                                                                          \
-        sp::spiritLog() << sp::Warn{(__VA_ARGS__)};                            \
-    }
-
-
-////////////////////////////////////////////////////////////
-/// \ingroup Errors
 /// \brief Assertion macro, takes a Condition and params to sp::SpiritError constructor
 ///
 ////////////////////////////////////////////////////////////
 #define SPIRIT_ASSERT(COND, ...)                                               \
     if (!(COND))                                                               \
     {                                                                          \
-        throw(sp::AssertionError{__VA_ARGS__});                                               \
+        throw(sp::AssertionError{__VA_ARGS__});                                \
     }
 
 

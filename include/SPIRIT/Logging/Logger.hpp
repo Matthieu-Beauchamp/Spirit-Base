@@ -36,6 +36,7 @@
 
 #include <array>
 #include <mutex>
+#include <memory>
 
 namespace sp
 {

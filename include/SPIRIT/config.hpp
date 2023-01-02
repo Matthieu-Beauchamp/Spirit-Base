@@ -58,6 +58,7 @@
 // this is because compiler specific macros are not very reliable,
 // msys/gcc would define Linux as the platform.
 #if defined(SPIRIT_OS_WINDOWS)
+#    undef SPIRIT_API
 #    if defined(SPIRIT_EXPORT)
 #        define SPIRIT_API __declspec(dllexport)
 #    else
