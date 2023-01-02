@@ -27,7 +27,7 @@
 #define SPIRIT_MESSAGE_HPP
 
 #include "SPIRIT/Configuration/config.hpp"
-#include "Format.hpp"
+#include "SPIRIT/Logging/Format.hpp"
 #include "spdlog/logger.h"
 
 #include <experimental/source_location>

@@ -19,9 +19,13 @@ struct NotPrintable
 {
 };
 
-// TODO: Input is never tested
 // TODO: Many tests using "child" stringstream were removed,
 //      now very little is tested here.
+// -output to files should not be colored when automatic
+// -test correct terminal detection..?
+// -test always and never modes with streamstreams
+// -test ansiMode changes.
+//
 
 TEST_CASE("Ansi Stream on connex classes")
 {

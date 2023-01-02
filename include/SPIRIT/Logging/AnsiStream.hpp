@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////
 //
-// Spirit Engine
+// Spirit
 // Copyright (C) 2022 Matthieu Beauchamp-Boulay
 //
 // This software is provided 'as-is', without any express or implied warranty.
@@ -23,8 +23,8 @@
 ////////////////////////////////////////////////////////////
 
 
-#ifndef SPIRIT_ENGINE_COLOREDSTREAM_HPP
-#define SPIRIT_ENGINE_COLOREDSTREAM_HPP
+#ifndef SPIRIT_ANSISTREAM_HPP
+#define SPIRIT_ANSISTREAM_HPP
 
 #include "SPIRIT/Configuration/config.hpp"
 #include "AnsiEscape.hpp"
@@ -270,4 +270,4 @@ extern SPIRIT_API sp::AnsiFileStream ansiErr;
 } // namespace sp
 
 
-#endif // SPIRIT_ENGINE_COLOREDSTREAM_HPP
+#endif // SPIRIT_ANSISTREAM_HPP

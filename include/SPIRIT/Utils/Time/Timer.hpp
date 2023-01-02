@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////
 //
-// Spirit Engine
+// Spirit
 // Copyright (C) 2022 Matthieu Beauchamp-Boulay
 //
 // This software is provided 'as-is', without any express or implied warranty.
@@ -22,12 +22,11 @@
 //
 ////////////////////////////////////////////////////////////
 
-#ifndef SPIRIT_ENGINE_TIMER_H
-#define SPIRIT_ENGINE_TIMER_H
 
+#ifndef SPIRIT_TIMER_HPP
+#define SPIRIT_TIMER_HPP
 
 #include <chrono>
-
 #include "SPIRIT/Base.hpp"
 
 
@@ -52,7 +51,7 @@ public:
     void
     pause()
     {
-        if ( !paused )
+        if (!paused)
         {
             elapsed += std::chrono::high_resolution_clock::now() - time;
             paused = true;
@@ -63,9 +62,9 @@ public:
     void
     start()
     {
-        if ( paused )
+        if (paused)
         {
-            time = std::chrono::high_resolution_clock::now();
+            time   = std::chrono::high_resolution_clock::now();
             paused = false;
         }
     }
@@ -73,7 +72,9 @@ public:
 
     bool
     isPaused() const
-    { return paused; }
+    {
+        return paused;
+    }
 
 
     //////////////////////////////////////////////////////////
@@ -124,8 +125,9 @@ public:
 
 
 protected:
-    std::chrono::time_point< std::chrono::high_resolution_clock,
-            std::chrono::nanoseconds > time;
+
+    std::chrono::time_point<std::chrono::high_resolution_clock, std::chrono::nanoseconds>
+        time;
 
     std::chrono::nanoseconds elapsed{0};
     bool paused = true;
@@ -134,5 +136,4 @@ protected:
 } // namespace sp
 
 
-
-#endif //SPIRIT_ENGINE_TIMER_H
+#endif // SPIRIT_TIMER_HPP

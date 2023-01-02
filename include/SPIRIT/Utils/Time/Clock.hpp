@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////
 //
-// Spirit Engine
+// Spirit
 // Copyright (C) 2022 Matthieu Beauchamp-Boulay
 //
 // This software is provided 'as-is', without any express or implied warranty.
@@ -23,13 +23,11 @@
 ////////////////////////////////////////////////////////////
 
 
+#ifndef SPIRIT_CLOCK_HPP
+#define SPIRIT_CLOCK_HPP
+
 #include "Timer.hpp"
-
 #include <queue>
-
-
-#ifndef SPIRIT_ENGINE_CLOCK_H
-#    define SPIRIT_ENGINE_CLOCK_H
 
 
 namespace sp
@@ -68,7 +66,7 @@ public:
 
     void
     setMinimumTickPeriod(Nanoseconds minTime);
-    
+
     Nanoseconds
     getMinimumTickPeriod() const
     {
@@ -118,4 +116,4 @@ public:
 } // namespace sp
 
 
-#endif // SPIRIT_ENGINE_CLOCK_H
+#endif // SPIRIT_CLOCK_HPP

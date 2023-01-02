@@ -28,7 +28,7 @@
 
 #include "SPIRIT/Configuration/config.hpp"
 #include "AnsiStream.hpp"
-#include "Message.hpp"
+#include "details/Message.hpp"
 #include "spdlog/details/null_mutex.h"
 #include "spdlog/pattern_formatter.h"
 #include "spdlog/sinks/base_sink.h"

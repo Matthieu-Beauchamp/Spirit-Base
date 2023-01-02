@@ -47,7 +47,6 @@
 #include "AnsiStream.hpp"
 
 #include "Format.hpp"
-#include "Message.hpp"
 #include "Logger.hpp"
 
 #endif // SPIRIT_LOGGING_HPP
