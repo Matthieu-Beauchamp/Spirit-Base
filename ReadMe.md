@@ -16,6 +16,8 @@ notably for logging and errors.
 - Customizable logger
 - Streamable log messages (no macros)
 
+See the examples directory.
+
 ## Installation
 
 Requires:
