@@ -16,12 +16,9 @@ include(Macros)
 # C++ config
 ############################################################
 set(CMAKE_CXX_STANDARD 20)
-# Required recent feaatures (for compiler support):
+# Required recent features (for compiler support):
 #   std::source_location
 
-
-# Some useful tags for my bad memory
-# "-save-temps -O3 -march=native -ffast-math -Wall -Wextra"
 
 message("-- Compile Flags: ${SPIRIT_COMPILE_FLAGS}")
 set(CMAKE_CXX_FLAGS ${SPIRIT_COMPILE_FLAGS})
@@ -32,6 +29,7 @@ set(CMAKE_CXX_FLAGS ${SPIRIT_COMPILE_FLAGS})
 ############################################################
 
 # Options
+
 spirit_define_option(
         BUILD_SHARED_LIBS
         FALSE BOOL
@@ -40,16 +38,32 @@ spirit_define_option(
 )
 
 spirit_define_option(
-        SPIRIT_BUILD_TESTS
-        TRUE BOOL
+        SPIRIT_BASE_BUILD_TESTS
+        FALSE BOOL
         "Select if tests should be built"
 )
 
 spirit_define_option(
-        SPIRIT_BUILD_DOCS
-        TRUE BOOL
+        SPIRIT_BASE_BUILD_DOCS
+        FALSE BOOL
         "Select if docs should be built"
 )
+
+spirit_define_option(
+        SPIRIT_BASE_BUILD_EXAMPLES
+        FALSE BOOL
+        "Select if examples should be built"
+)
+
+
+get_directory_property(hasParent PARENT_DIRECTORY)
+if(hasParent)
+else() # Root project -> dev build
+    set(SPIRIT_BASE_BUILD_TESTS TRUE)
+    set(SPIRIT_BASE_BUILD_DOCS TRUE)
+    set(SPIRIT_BASE_BUILD_EXAMPLES TRUE)
+endif()
+
 
 ############################################################
 # Paths
@@ -82,15 +96,15 @@ endif()
 # Build
 ############################################################
 spirit_update_submodules(${SPIRIT_BASE_ROOT})
+add_library(spirit-base "")
 
 if (${CMAKE_SYSTEM_NAME} MATCHES "Windows")
     if(${MSVC})
-        add_compile_definitions("-DNOMINMAX") # Removes min and max macros # TODO: I dont think it caused problems in base
-        add_compile_definitions("/EHsc") # Unwinding semantics disabled otherwise (Can't compile Error class)
+        # Unwinding semantics disabled otherwise (Can't compile Error class)
+        target_compile_definitions(spirit-base "/EHsc")
     endif()
 endif()
 
-add_library(spirit-base "")
 # Dependencies #############################################
 include(build_extLibs)
 
@@ -104,7 +118,7 @@ build_Boost(${SPIRIT_BASE_ROOT}/ext_libs/boost spirit-base)
 target_compile_definitions(spirit-base PRIVATE SPIRIT_EXPORT)
 
 
-# TODO: Include headers as sources
+# TODO: Include headers as sources (helps for meta information)
 set(SPIRIT_BASE_COMPONENTS 
     Logging
     Error
@@ -115,16 +129,14 @@ foreach (COMPONENT ${SPIRIT_BASE_COMPONENTS})
 endforeach ()
 
 
-if (SPIRIT_BUILD_TESTS)
+if (SPIRIT_BASE_BUILD_TESTS)
     add_subdirectory(${SPIRIT_BASE_TEST_DIR})
 endif ()
 
+if (SPIRIT_BASE_BUILD_DOCS)
+    add_subdirectory("${SPIRIT_BASE_ROOT}/docs/")
+endif ()
 
-# Build examples
-# TODO: IF (BUILD EXAMPLES)
-add_subdirectory("${SPIRIT_BASE_ROOT}/examples/")
-
-
-if (SPIRIT_BUILD_DOCS)
-    add_subdirectory(./docs)
+if (SPIRIT_BASE_BUILD_EXAMPLES)
+    add_subdirectory("${SPIRIT_BASE_ROOT}/examples/")
 endif ()

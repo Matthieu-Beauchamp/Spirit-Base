@@ -1,8 +1,3 @@
-# Resource Link:
-#   https://cmake.org/cmake/help/book/mastering-cmake/chapter/Testing%20With%20CMake%20and%20CTest.html
-
-# TODO: Use catch for testing https://github.com/catchorg/Catch2
-
 enable_testing()
 
 # May require configuring more than once because of the 
@@ -17,17 +12,6 @@ include(CTest)
 
 include(Catch)
 
-# Catch example #################################################
-# # These tests can use the Catch2-provided main
-# add_executable(tests test.cpp)
-# target_link_libraries(tests PRIVATE Catch2::Catch2WithMain)
-
-# # These tests need their own main
-# add_executable(custom-main-tests test.cpp test-main.cpp)
-# target_link_libraries(custom-main-tests PRIVATE Catch2::Catch2)
-################################################################
-
-
 macro(addTest testName ...)
     add_executable(${testName} ${...})
     target_include_directories(${testName} PRIVATE Catch2/src/)
@@ -37,7 +21,6 @@ endmacro()
 
 addTest(AnsiEscape-test testAnsiEscape.cpp)
 addTest(Concepts-test testConcepts.cpp)
-
 addTest(fileBuf-test testFileBuf.cpp)
 addTest(ansiStream-test testAnsiStream.cpp)
 addTest(Logger-test testLogger.cpp)
@@ -45,7 +28,7 @@ addTest(Logger-test testLogger.cpp)
 add_custom_target(TestAll ALL
     COMMAND ctest -C $<CONFIG> --output-on-failure
     WORKING_DIRECTORY ${CMAKE_CURRENT_OUTPUT_DIR} 
-    DEPENDS fileBuf-test ansiStream-test
+    DEPENDS AnsiEscape-test Concepts-test fileBuf-test ansiStream-test Logger-test
 )
 
 

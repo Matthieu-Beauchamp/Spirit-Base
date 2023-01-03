@@ -6,8 +6,6 @@ include(Macros)
 ############################################################
 function(build_spdlog spdlog_root target)
 add_subdirectory(${spdlog_root})
-
-    # TODO: include directory should be made PRIVATE (all in .cpp files)
     target_include_directories(${target} PUBLIC ${spdlog_root}/include)
     target_link_libraries(${target} spdlog)
 endfunction()

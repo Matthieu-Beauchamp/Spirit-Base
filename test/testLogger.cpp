@@ -82,21 +82,21 @@ TEST_CASE("File Sinks")
         SECTION("Automatic")
         {
             sp::AnsiFileSink_mt out{stdout};
-            REQUIRE(out.file() == stdout);
+            REQUIRE(out.stream().file() == stdout);
             REQUIRE(out.isAnsiEnabled() == sp::supportsAnsi(stdout));
         }
 
         SECTION("Always")
         {
-            sp::AnsiFileSink_mt out{stdout, sp::AnsiFileSink_mt::always};
-            REQUIRE(out.file() == stdout);
+            sp::AnsiFileSink_mt out{stdout, sp::ansiMode::always};
+            REQUIRE(out.stream().file() == stdout);
             REQUIRE(out.isAnsiEnabled() == true);
         }
 
         SECTION("Never")
         {
-            sp::AnsiFileSink_mt out{stdout, sp::AnsiFileSink_mt::never};
-            REQUIRE(out.file() == stdout);
+            sp::AnsiFileSink_mt out{stdout, sp::ansiMode::never};
+            REQUIRE(out.stream().file() == stdout);
             REQUIRE(out.isAnsiEnabled() == false);
         }
 
