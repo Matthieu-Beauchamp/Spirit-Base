@@ -23,8 +23,8 @@
 ////////////////////////////////////////////////////////////
 
 
-#ifndef SPIRIT_MESSAGE_HPP
-#define SPIRIT_MESSAGE_HPP
+#ifndef SPIRIT_MESSAGEBASE_HPP
+#define SPIRIT_MESSAGEBASE_HPP
 
 #include "SPIRIT/Configuration/config.hpp"
 #include "SPIRIT/Logging/Format.hpp"
@@ -114,71 +114,9 @@ private:
 };
 
 
-////////////////////////////////////////////////////////////
-/// \brief Allows constructing loggable message with source location
-///
-/// The location where the message is created will be kept,
-/// this includes the file, line and enclosing function name.
-///
-/// The arguments for construction can be anything from a string,
-/// an object with an operator<< overload with ostream to
-/// a format string with multiple format arguments:
-/// \code sp::Info{"{} != {}", 1, 2}; \endcode
-///
-/// See sp::format
-///
-/// The intended usage is to stream messages to a logger:
-/// \code
-/// sp::Logger << sp::Info{"Some meaningful information: {}", someClass};
-///
-/// // Ansi escape sequences are supported (see the Sinks):
-/// sp::Logger << sp::Error{"Operation failed: {}{} != {}{}",
-///                         sp::red, 1, 2, sp::reset};
-/// \endcode
-////////////////////////////////////////////////////////////
-template <LogLevel lvl, class... Args>
-class Message : public MessageBase<lvl>
-{
-    typedef std::experimental::source_location SourceLocation;
-    typedef MessageBase<lvl> Base;
-
-public:
-
-    Message(SourceLocation loc = SourceLocation::current()) : Base{"", loc} {}
-
-    Message(
-        std::string_view msg,
-        Args &&... args,
-        SourceLocation loc = SourceLocation::current()
-    )
-        : Base{sp::format(msg, std::forward<Args>(args)...), loc}
-    {
-    }
-
-    // // T cannot be statically converted to format string (including string_view/wstring_view)
-    template <
-        class T,
-        std::enable_if_t<!spdlog::is_convertible_to_any_format_string<T>::value, int> = 0>
-    Message(const T & msg, SourceLocation loc = SourceLocation::current())
-        : Base{sp::format("{}", msg), loc}
-    {
-    }
-};
-
-// Deduction Guides
-template <LogLevel lvl>
-Message() -> Message<lvl>;
-
-template <LogLevel lvl, class T>
-Message(T &&) -> Message<lvl>;
-
-template <LogLevel lvl, class... Args>
-Message(std::string_view, Args &&...) -> Message<lvl, Args...>;
-
 } // namespace details
-
 
 } // namespace sp
 
 
-#endif // SPIRIT_MESSAGE_HPP
+#endif // SPIRIT_MESSAGEBASE_HPP

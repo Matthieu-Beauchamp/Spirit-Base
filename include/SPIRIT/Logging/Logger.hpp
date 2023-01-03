@@ -28,7 +28,7 @@
 
 #include "SPIRIT/Configuration/config.hpp"
 #include "AnsiStream.hpp"
-#include "details/Message.hpp"
+#include "Message.hpp"
 #include "spdlog/details/null_mutex.h"
 #include "spdlog/pattern_formatter.h"
 #include "spdlog/sinks/base_sink.h"
@@ -42,38 +42,43 @@ namespace sp
 {
 
 ////////////////////////////////////////////////////////////
-// Log message levels
+/// \ingroup Logging
+/// \defgroup Loggers Loggers
+/// \brief Loggers are used by Spirit to communicate information to users
+/// 
+/// Spirit uses ansi aware sinks for colored output when stdout is a terminal.
+/// 
+/// When adding sinks to Spirit's logger, make sure to use an ansi aware sink
+/// (AnsiStreamSink).
+/// 
+/// Spirit uses the spdlog library for logging, for more information see
+/// https://github.com/gabime/spdlog/wiki 
+/// 
 ////////////////////////////////////////////////////////////
 
-template <class... Args>
-using Trace = details::Message<LogLevel::trace, Args...>;
-
-template <class... Args>
-using Debug = details::Message<LogLevel::debug, Args...>;
-
-template <class... Args>
-using Info = details::Message<LogLevel::info, Args...>;
-
-template <class... Args>
-using Warn = details::Message<LogLevel::warn, Args...>;
-
-template <class... Args>
-using Error = details::Message<LogLevel::err, Args...>;
-
-template <class... Args>
-using Critical = details::Message<LogLevel::critical, Args...>;
-
-
 ////////////////////////////////////////////////////////////
-// wrapping spdlog
+/// \ingroup Loggers
+/// \brief Logger type
+/// 
 ////////////////////////////////////////////////////////////
-
 using Logger    = spdlog::logger;
 using LoggerPtr = std::shared_ptr<sp::Logger>;
 
+////////////////////////////////////////////////////////////
+/// \ingroup Loggers
+/// \brief Creates a logger without any sinks
+/// 
+////////////////////////////////////////////////////////////
 sp::LoggerPtr
 makeLogger(const std::string & name);
 
+////////////////////////////////////////////////////////////
+/// \ingroup Loggers
+/// \brief Creates a logger with a sink
+/// 
+/// SinkArgs are forwarded to Sink's constructor
+/// 
+////////////////////////////////////////////////////////////
 template <class Sink, class... SinkArgs>
 sp::LoggerPtr
 makeLogger(const std::string & name, SinkArgs &&... args)
@@ -81,36 +86,54 @@ makeLogger(const std::string & name, SinkArgs &&... args)
     return spdlog::create<Sink>(name, std::forward<SinkArgs>(args)...);
 }
 
-// Get the default pattern string used by spiritLogger()
+
+////////////////////////////////////////////////////////////
+/// \ingroup Loggers
+/// \brief Get the default pattern string used by spiritLogger()
+/// 
+////////////////////////////////////////////////////////////
 [[nodiscard]] std::string
 spiritPattern();
 
-// Returns the logger used by Spirit
-// You a free to remove/modify its sinks, format pattern, etc.
-// Note that added sinks will not share pattern, call set_pattern with
-// spiritPattern() or your own:
-// sp::spiritLogger()->set_pattern(sp::spiritPattern());
+////////////////////////////////////////////////////////////
+/// \ingroup Loggers
+/// \brief Returns the logger used by Spirit
+///
+/// You a free to remove/modify its sinks, format pattern, etc.
+/// Note that added sinks will not share pattern, call set_pattern with
+/// spiritPattern() or your own:
+/// 
+/// \code
+/// sp::spiritLogger()->sinks().push_back(std::make_shared<MySink>(...));
+/// sp::spiritLogger()->set_pattern(sp::spiritPattern());
+/// \endcode 
+/// 
+/// Pattern strings reference:
+/// https://github.com/gabime/spdlog/wiki/3.-Custom-formatting#customizing-format-using-set_pattern
+///
+////////////////////////////////////////////////////////////
 [[nodiscard]] sp::LoggerPtr
 spiritLogger();
 
-
-// Convenience for streaming Messages:
-//
-// sp::spiritLog() << sp::Info("hello");
-//
+////////////////////////////////////////////////////////////
+/// \ingroup Loggers
+/// \brief Convenience for streaming Messages:
+/// 
+/// \code
+/// sp::spiritLog() << sp::Info("hello");
+/// \endcode
+////////////////////////////////////////////////////////////
 [[nodiscard]] inline sp::Logger &
 spiritLog()
 {
     return *sp::spiritLogger();
 }
 
-// set pattern reference:
-// https://github.com/gabime/spdlog/wiki/3.-Custom-formatting#customizing-format-using-set_pattern
-
 // TODO: Naming is not great below...
 
 
 ////////////////////////////////////////////////////////////
+/// \ingroup Loggers
 /// \brief Defines how the color range for a given LogLevel is displayed
 ///     (see Logger, AnsiStreamSink and AnsiFileSink support color output)
 ////////////////////////////////////////////////////////////
@@ -134,21 +157,23 @@ public:
 };
 
 ////////////////////////////////////////////////////////////
+/// \ingroup Loggers
 /// \brief Creates a Sink that outputs to a given ostream
 ///
-/// The sink is meant to be used with sp::Logger,
-/// the stream can be accessed using AnsiStreamWrapper methods.
+/// The sink is meant to be used with sp::Logger.
+/// 
+/// The underlying stream can be accessed using AnsiStreamWrapper methods.
 ///
-/// The stream is made to be aware of Ansi TextStyle escapes.
-/// It will not output them when ansi is disabled. (Terminal Control escape are not filtered)
+/// The stream is made to be aware of Ansi TextStyles escapes.
+/// It will not output them when ansi is disabled. (TerminalControls escapes are not filtered)
 ///
 ////////////////////////////////////////////////////////////
 template <class Stream, class Mutex>
 class AnsiStreamSink : public spdlog::sinks::base_sink<Mutex>,
-                       public sp::traits::AnsiWrapped_t<Stream>
+                       public sp::AnsiWrapped_t<Stream>
 {
     typedef spdlog::sinks::base_sink<Mutex> BaseSink;
-    typedef sp::traits::AnsiWrapped_t<Stream> BaseStream;
+    typedef sp::AnsiWrapped_t<Stream> BaseStream;
 
 public:
 
@@ -158,17 +183,30 @@ public:
     typedef typename BaseStream::off_type off_type;
     typedef typename BaseStream::traits_type traits_type;
 
-    // Args are passed to Stream constructor
-    template <class... Args>
+    //////////////////////////////////////////////////////////// 
+    /// \brief StreamArgs are forwarded to Stream's constructor
+    /// 
+    ////////////////////////////////////////////////////////////
+    template <class... StreamArgs>
     AnsiStreamSink(
         bool enableAnsi,
         std::unique_ptr<spdlog::formatter> && formatter,
-        Args &&... args
+        StreamArgs &&... args
     );
 
-    template <class... Args>
-    AnsiStreamSink(bool enableAnsi, Args &&... args);
+    //////////////////////////////////////////////////////////// 
+    /// \brief StreamArgs are forwarded to Stream's constructor
+    /// 
+    ////////////////////////////////////////////////////////////
+    template <class... StreamArgs>
+    AnsiStreamSink(bool enableAnsi, StreamArgs &&... args);
 
+    ////////////////////////////////////////////////////////////
+    /// \brief Defines the LevelColor for a given LogLevel.
+    /// 
+    /// This defines how spdlog's color range (defined by the pattern string)
+    /// will be styled
+    ////////////////////////////////////////////////////////////
     void
     setLevelColor(LogLevel lvl, LevelColor color);
 
@@ -203,14 +241,25 @@ private:
         levelColors{trace, debug, info, warn, error, critical, off};
 };
 
+////////////////////////////////////////////////////////////
+/// \ingroup Loggers
+/// \brief Single threaded stream Sink
+/// 
+////////////////////////////////////////////////////////////
 template <class Stream>
 using AnsiStreamSink_st = AnsiStreamSink<Stream, spdlog::details::null_mutex>;
 
+////////////////////////////////////////////////////////////
+/// \ingroup Loggers
+/// \brief Multi threaded stream Sink
+/// 
+////////////////////////////////////////////////////////////
 template <class Stream>
 using AnsiStreamSink_mt = AnsiStreamSink<Stream, std::mutex>;
 
 
 ////////////////////////////////////////////////////////////
+/// \ingroup Loggers
 /// \brief Creates an Ansi escapes aware sink that outputs to a FILE
 ///
 /// Allows logging color output that will print plain text when the FILE
@@ -244,7 +293,18 @@ public:
     }
 };
 
+////////////////////////////////////////////////////////////
+/// \ingroup Loggers
+/// \brief Single threaded file Sink
+/// 
+////////////////////////////////////////////////////////////
 using AnsiFileSink_st = AnsiFileSink<spdlog::details::null_mutex>;
+
+////////////////////////////////////////////////////////////
+/// \ingroup Loggers
+/// \brief Multi threaded file Sink
+/// 
+////////////////////////////////////////////////////////////
 using AnsiFileSink_mt = AnsiFileSink<std::mutex>;
 
 } // namespace sp

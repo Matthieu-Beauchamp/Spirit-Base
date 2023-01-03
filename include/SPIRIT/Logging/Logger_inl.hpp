@@ -34,21 +34,21 @@ namespace sp
 {
 
 template <class Stream, class Mutex>
-template <class... Args>
+template <class... StreamArgs>
 AnsiStreamSink<Stream, Mutex>::AnsiStreamSink(
     bool enableAnsi,
     std::unique_ptr<spdlog::formatter>&& formatter,
-    Args &&... args
+    StreamArgs &&... args
 )
-    : BaseSink{std::move(formatter)}, BaseStream{enableAnsi, std::forward<Args>(args)...}
+    : BaseSink{std::move(formatter)}, BaseStream{enableAnsi, std::forward<StreamArgs>(args)...}
 {
 }
 
 template <class Stream, class Mutex>
-template <class... Args>
-AnsiStreamSink<Stream, Mutex>::AnsiStreamSink(bool enableAnsi, Args &&... args)
+template <class... StreamArgs>
+AnsiStreamSink<Stream, Mutex>::AnsiStreamSink(bool enableAnsi, StreamArgs &&... args)
     : BaseSink{std::make_unique<spdlog::pattern_formatter>()},
-      BaseStream{enableAnsi, std::forward<Args>(args)...}
+      BaseStream{enableAnsi, std::forward<StreamArgs>(args)...}
 {
 }
 
@@ -110,6 +110,7 @@ AnsiStreamSink<Stream, Mutex>::filterSequences(const char_type * start, size_t s
 
     const char_type * const last = start + size;
 
+    // start and end of the range to write (not of ansi sequences)
     const char_type * beg = start;
     const char_type * end = std::find(beg, last, seqBegin);
     this->stream().write(beg, end - beg);

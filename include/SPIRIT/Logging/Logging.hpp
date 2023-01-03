@@ -43,6 +43,22 @@
 ///
 ////////////////////////////////////////////////////////////
 
+
+////////////////////////////////////////////////////////////
+/// \ingroup Base
+/// \defgroup Logging Logging
+/// \brief Ansi aware logging facilities
+/// 
+/// Spirit modules will use these logging facilities to inform 
+/// the user of any relevant informations. Multiple log levels
+/// allows filtering what information the user wants to see (see Configuration).
+/// 
+/// The user may wish to use these classes for their own logging.
+/// The user may also wish to modify the behavior of Spirit's logger
+/// (see Logger).
+/// 
+////////////////////////////////////////////////////////////
+
 #include "AnsiEscape.hpp"
 #include "AnsiStream.hpp"
 

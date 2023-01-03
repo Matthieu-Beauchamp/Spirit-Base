@@ -28,7 +28,7 @@
 
 #include "SPIRIT/Concepts/Concepts.hpp"
 #include "spdlog/fmt/fmt.h"
-#include "spdlog/fmt/ostr.h"
+#include "spdlog/fmt/ostr.h" // needs to be included for operator<< resolution
 
 #include <string>
 #include <string_view>
@@ -37,10 +37,11 @@ namespace sp
 {
 
 
-////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/// \ingroup Logging
 /// \brief Format any number of printable arguments into a string
 ///
-/// Works for standalone objects with have an operator<< overload
+/// Works for standalone objects with an operator<< overload
 /// with std::ostream and complex format strings with any number of
 /// format arguments:
 /// \code sp::format("{} != {}", 1, 2); \endcode
@@ -49,7 +50,8 @@ namespace sp
 /// https://fmt.dev/latest/syntax.html.
 ///
 /// For objects with an overloaded operator<<, 
-/// This file must be included for the format function to work.
+/// This file must be included in the file defining the overload 
+/// for the format function to work.
 ////////////////////////////////////////////////////////////
 template <
     class... Args,

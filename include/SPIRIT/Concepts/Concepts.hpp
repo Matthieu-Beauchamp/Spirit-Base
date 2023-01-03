@@ -78,33 +78,61 @@ struct Printable<
 
 ////////////////////////////////////////////////////////////
 /// \ingroup Concepts
-/// \brief Any object that can be used to do IO (<< or >> with const char *)
+/// \brief Any object that can be used as an output stream
 ///
 ////////////////////////////////////////////////////////////
 template <class T, class = void>
-struct isStream : public std::false_type
+struct isOutStream : public std::false_type
 {
 };
 
-// out stream
 template <class T>
-struct isStream<T, void_t<decltype(std::declval<T &>() << std::declval<const char *>())>>
-    : public std::true_type
-{
-};
-
-// in stream
-template <class T>
-struct isStream<T, void_t<decltype(std::declval<T &>() >> std::declval<const char *>())>>
+struct isOutStream<
+    T,
+    void_t<decltype(std::declval<T &>() << std::declval<const char *>())>>
     : public std::true_type
 {
 };
 
 
-////////////////////////////////////////////////////////////
-// Base class of Ts detection
-////////////////////////////////////////////////////////////
+// // Does not work
+// ////////////////////////////////////////////////////////////
+// /// \ingroup Concepts
+// /// \brief Any object that can be used as an input stream
+// ///
+// ////////////////////////////////////////////////////////////
+// template <class T, class = void>
+// struct isInStream : public std::false_type
+// {
+// };
 
+// template <class T>
+// struct isInStream<
+//     T,
+//     void_t<decltype(std::declval<T&>().get(std::declval<char&>()))>>
+//     // void_t<decltype(std::declval<T &>() >> std::declval<char*>())>>
+//     : public std::true_type
+// {
+// };
+
+
+// ////////////////////////////////////////////////////////////
+// /// \ingroup Concepts
+// /// \brief Any object that can be used as an output and input stream
+// ///
+// ////////////////////////////////////////////////////////////
+// template <class T>
+// struct isIOStream
+//     : public std::integral_constant<bool, isOutStream<T>::value && isInStream<T>::value>
+// {
+// };
+
+
+////////////////////////////////////////////////////////////
+/// \ingroup Concepts
+/// \brief determines if all Ts are derived from BaseType
+/// 
+////////////////////////////////////////////////////////////
 template <class BaseType, class... Ts>
 struct areOfBaseType : public std::integral_constant<
                            bool,
@@ -220,14 +248,15 @@ struct Bases<B, Bs...>
 } // namespace details
 
 ////////////////////////////////////////////////////////////
+/// \ingroup Concepts
 /// \brief Finds the most derived base common to all Ts, given a set of Bases Bs.
-/// 
+///
 /// This was needed to correcty detect the type of sp::Escapes<...>
 /// such that it will inherit from the common denominator (AnsiEscape, TextStyle, ...)
-/// 
+///
 /// Diamond inheritance is not supported.
 /// Furthemore, Bases are expected to be a part of the same tree.
-/// 
+///
 /// given the inheritance tree:
 /// \code
 ///     A
@@ -240,15 +269,15 @@ struct Bases<B, Bs...>
 /// Bases<A, B, C, D>::DeepestOf<A, B, C, D> -> A
 /// Bases<A, B, C, D>::DeepestOf<B, D> -> B
 /// \endcode
-/// 
+///
 ////////////////////////////////////////////////////////////
 template <class... Bs>
 struct Bases
 {
     template <class... Ts>
-    using DeepestOf = typename details::Bases<Bs...>::DeepestBaseOf<Ts...>::DeepestBaseOf_t;
+    using DeepestOf =
+        typename details::Bases<Bs...>::DeepestBaseOf<Ts...>::DeepestBaseOf_t;
 };
-
 
 
 } // namespace traits

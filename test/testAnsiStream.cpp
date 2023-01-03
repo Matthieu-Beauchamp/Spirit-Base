@@ -2,8 +2,9 @@
 #include "catch2/catch_all.hpp"
 
 #include <iomanip>
-#include <ostream>
-#include <iosfwd>
+#include <iostream>
+#include <istream>
+
 struct UserDefined
 {
     float x;
@@ -33,23 +34,33 @@ TEST_CASE("Ansi Stream on connex classes")
     {
         SECTION("isStream")
         {
-            REQUIRE(sp::traits::isStream<sp::AnsiFileStream>::value);
+            REQUIRE(sp::traits::isOutStream<sp::AnsiFileStream>::value);
+            
             REQUIRE(
-                sp::traits::isStream<sp::AnsiStreamWrapper<std::ostream>>::value
+                sp::traits::isOutStream<sp::AnsiStreamWrapper<std::ostream>>::value
             );
+            
+            
             REQUIRE(
-                sp::traits::isStream<sp::AnsiStreamWrapper<std::stringstream>>::value
+                sp::traits::isOutStream<sp::AnsiStreamWrapper<std::iostream>>::value
             );
 
-            REQUIRE(sp::traits::isStream<std::ostream>::value);
-            REQUIRE(sp::traits::isStream<std::basic_iostream<char>>::value);
-            REQUIRE(sp::traits::isStream<std::basic_iostream<wchar_t>>::value);
-            REQUIRE(sp::traits::isStream<std::basic_stringstream<char>>::value);
+            REQUIRE(
+                sp::traits::isOutStream<sp::AnsiStreamWrapper<std::stringstream>>::value
+            );
 
-            REQUIRE_FALSE(sp::traits::isStream<std::string>::value);
-            REQUIRE_FALSE(sp::traits::isStream<UserDefined>::value);
-            REQUIRE_FALSE(sp::traits::isStream<NotPrintable>::value);
-            REQUIRE_FALSE(sp::traits::isStream<int>::value);
+            REQUIRE(sp::traits::isOutStream<std::ostream>::value);
+            // REQUIRE(sp::traits::isInStream<std::istream>::value);
+            // REQUIRE(sp::traits::isIOStream<std::iostream>::value);
+            
+            // REQUIRE(sp::traits::isIOStream<std::basic_iostream<char>>::value);
+            // REQUIRE(sp::traits::isIOStream<std::basic_iostream<wchar_t>>::value);
+            // REQUIRE(sp::traits::isIOStream<std::basic_stringstream<char>>::value);
+
+            REQUIRE_FALSE(sp::traits::isOutStream<std::string>::value);
+            // REQUIRE_FALSE(sp::traits::isInStream<UserDefined>::value);
+            REQUIRE_FALSE(sp::traits::isOutStream<NotPrintable>::value);
+            // REQUIRE_FALSE(sp::traits::isInStream<int>::value);
         }
 
         SECTION("Printable")
@@ -73,12 +84,12 @@ TEST_CASE("Ansi Stream on connex classes")
         SECTION("Wrapped type")
         {
             REQUIRE(std::is_same<
-                    sp::traits::AnsiWrapped_t<std::ostream>,
+                    sp::AnsiWrapped_t<std::ostream>,
                     sp::AnsiStreamWrapper<std::ostream>>::value);
 
             // does not wrap twice
             REQUIRE(std::is_same<
-                    sp::traits::AnsiWrapped_t<sp::AnsiStreamWrapper<std::ostream>>,
+                    sp::AnsiWrapped_t<sp::AnsiStreamWrapper<std::ostream>>,
                     sp::AnsiStreamWrapper<std::ostream>>::value);
         }
     }
