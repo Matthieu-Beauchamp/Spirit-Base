@@ -16,8 +16,6 @@ notably for logging and errors.
 - Customizable logger
 - Streamable log messages (no macros)
 
-See the examples directory.
-
 ## Installation
 
 Requires:
@@ -52,6 +50,8 @@ add_subdirectory(libs/Spirit-Base)
 will reveal a Spirit-Base-docs CMake target
 that will generate Doxygen html documentation in Spirit-Base/docs/Out/html/index.html
 when built.
+
+There are some examples of typical usage in the examples folder.
 
 # Licenses
 While Spirit-Base's code is licensed under the zlib license, it uses the following
