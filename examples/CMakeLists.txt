@@ -15,3 +15,9 @@ add_executable(LoggersExample
         )
 
 target_link_libraries(LoggersExample spirit-base)
+
+add_executable(ErrorsExample
+        "Errors.cpp"
+        )
+
+target_link_libraries(ErrorsExample spirit-base)

@@ -20,7 +20,6 @@ set(CMAKE_CXX_STANDARD 20)
 #   std::source_location
 
 
-message("-- Compile Flags: ${SPIRIT_COMPILE_FLAGS}")
 set(CMAKE_CXX_FLAGS ${SPIRIT_COMPILE_FLAGS})
 
 
@@ -101,7 +100,7 @@ add_library(spirit-base "")
 if (${CMAKE_SYSTEM_NAME} MATCHES "Windows")
     if(${MSVC})
         # Unwinding semantics disabled otherwise (Can't compile Error class)
-        target_compile_definitions(spirit-base "/EHsc")
+        target_compile_options(spirit-base "/EHsc")
     endif()
 endif()
 
@@ -113,7 +112,7 @@ build_Boost(${SPIRIT_BASE_ROOT}/ext_libs/boost spirit-base)
 
 # Build Spirit Base #############################################
 
-# Only export when building the lib
+# For Windows dll exports/imports (SPIRIT_API macro)
 # Will this work when other modules will include / link to it?
 target_compile_definitions(spirit-base PRIVATE SPIRIT_EXPORT)
 

@@ -6,8 +6,9 @@ add_subdirectory(Catch2)
 
 list(APPEND CMAKE_MODULE_PATH Catch2/extras)
 
+# hack to prevent CTest targets from showing up
 # https://stackoverflow.com/a/57240389
-set_property(GLOBAL PROPERTY CTEST_TARGETS_ADDED 1) # hack to prevent CTest targets from showing up
+set_property(GLOBAL PROPERTY CTEST_TARGETS_ADDED 1) 
 include(CTest)
 
 include(Catch)

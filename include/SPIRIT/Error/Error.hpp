@@ -66,8 +66,8 @@ public:
     template <class... Args>
     SpiritError(Args &&... args) : SpiritError{}
     {
-        explanation += std::string{"message from thrower: "}
-                       + sp::format(std::forward<Args>(args)...);
+        explanation += std::string{"Error message: \n"}
+                       + sp::format(std::forward<Args>(args)...) + "\n";
     }
 
 
