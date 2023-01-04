@@ -66,5 +66,5 @@ Developpement should be done through the Spirit super-project at
 https://github.com/Matthieu-Beauchamp/Spirit since it includes
 the .clang-format and allows for easy toggling of internal targets per module.
 
-Issues should for this modules should still be posted per-module and not on the 
+Issues for modules should still be posted per-module and not on the 
 Spirit repository.
