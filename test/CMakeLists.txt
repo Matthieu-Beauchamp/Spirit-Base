@@ -6,30 +6,17 @@ add_subdirectory(Catch2)
 
 list(APPEND CMAKE_MODULE_PATH Catch2/extras)
 
-# hack to prevent CTest targets from showing up
-# https://stackoverflow.com/a/57240389
-set_property(GLOBAL PROPERTY CTEST_TARGETS_ADDED 1) 
-include(CTest)
+include(testing)
 
-include(Catch)
-
-macro(addTest testName ...)
-    add_executable(${testName} ${...})
-    target_include_directories(${testName} PRIVATE Catch2/src/)
-    target_link_libraries(${testName} PRIVATE spirit-base Catch2::Catch2WithMain)
-    catch_discover_tests(${testName})
+macro(spirit_base_add_test testName ...)
+    spirit_add_test(spirit-base ${testName} ${...})
 endmacro()
 
-addTest(AnsiEscape-test testAnsiEscape.cpp)
-addTest(Concepts-test testConcepts.cpp)
-addTest(fileBuf-test testFileBuf.cpp)
-addTest(ansiStream-test testAnsiStream.cpp)
-addTest(Logger-test testLogger.cpp)
+spirit_base_add_test(AnsiEscape-test testAnsiEscape.cpp)
+spirit_base_add_test(Concepts-test testConcepts.cpp)
+spirit_base_add_test(fileBuf-test testFileBuf.cpp)
+spirit_base_add_test(ansiStream-test testAnsiStream.cpp)
+spirit_base_add_test(Logger-test testLogger.cpp)
 
-add_custom_target(TestAll ALL
-    COMMAND ctest -C $<CONFIG> --output-on-failure
-    WORKING_DIRECTORY ${CMAKE_CURRENT_OUTPUT_DIR} 
-    DEPENDS AnsiEscape-test Concepts-test fileBuf-test ansiStream-test Logger-test
-)
-
-
+# adds spirit-base-test
+spirit_test_all(spirit-base)
