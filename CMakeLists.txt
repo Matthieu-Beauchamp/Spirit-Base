@@ -1,4 +1,5 @@
 # TODO: support installing
+# https://cmake.org/cmake/help/latest/manual/cmake-packages.7.html
 # https://www.foonathan.net/2016/03/cmake-install/ 
 
 ############################################################
@@ -76,9 +77,6 @@ set(SPIRIT_BASE_INCLUDE_DIR ${SPIRIT_BASE_ROOT}/include)
 set(SPIRIT_BASE_SRC_DIR ${SPIRIT_BASE_ROOT}/src/SPIRIT)
 set(SPIRIT_BASE_TEST_DIR ${SPIRIT_BASE_ROOT}/test)
 
-include_directories(${SPIRIT_BASE_INCLUDE_DIR})
-include_directories(${SPIRIT_BASE_ROOT}) # Access src/ dir to include .inl files
-
 # OS
 # The CMake system check are more reliable than the C++ macros
 #   when using Clang or Cygwin on windows for examples -> __linux__
@@ -116,6 +114,7 @@ build_Boost(${SPIRIT_BASE_ROOT}/ext_libs/boost spirit-base)
 # Will this work when other modules will include / link to it?
 target_compile_definitions(spirit-base PRIVATE SPIRIT_EXPORT)
 
+target_include_directories(spirit-base PUBLIC ${SPIRIT_BASE_INCLUDE_DIR})
 
 # TODO: Include headers as sources (helps for meta information)
 set(SPIRIT_BASE_COMPONENTS 

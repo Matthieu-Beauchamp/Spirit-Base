@@ -5,6 +5,7 @@ enable_testing()
 add_subdirectory(Catch2)
 
 list(APPEND CMAKE_MODULE_PATH Catch2/extras)
+list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR})
 
 include(testing)
 
