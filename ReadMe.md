@@ -62,7 +62,7 @@ modules which have differing licenses:
 - Catch2 (for tests only): Boost Software License v1
 
 # Developpement
-Developpement should be done throught the Spirit super-project at 
+Developpement should be done through the Spirit super-project at 
 https://github.com/Matthieu-Beauchamp/Spirit since it includes
 the .clang-format and allows for easy toggling of internal targets per module.
 
