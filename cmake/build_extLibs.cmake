@@ -21,7 +21,7 @@ function(build_Boost boost_root target)
     set(B2_FLAGS "")
     macro(compileFlag flag)
         target_compile_definitions(${target} PRIVATE ${flag})
-        set(B2_FLAGS "${B2_FLAGS} cxxflags=-D${flag}")    
+        set(B2_FLAGS ${B2_FLAGS} cxxflags=-D${flag})    
     endmacro()
 
     set(BOOST_LINK_DIR "${boost_root}/stage/lib")
@@ -36,29 +36,27 @@ function(build_Boost boost_root target)
     endif()
 
     if (NOT EXISTS "${BOOST_LINK_DIR}")
-        message("Boost link directory not found at: ${BOOST_LINK_DIR}")
+        message(STATUS "Boost link directory not found at: ${BOOST_LINK_DIR}")
         if (EXISTS "${boost_root}")
-            message("Compiling Boost libraries")
+            message(STATUS "Compiling Boost libraries")
 
             if (${CMAKE_SYSTEM_NAME} MATCHES "Windows")
                 execute_process(COMMAND "bootstrap.bat" 
                     WORKING_DIRECTORY "${boost_root}")
 
-                execute_process(COMMAND "./b2.exe ${B2_FLAGS}"
+                execute_process(COMMAND "./b2.exe" ${B2_FLAGS}
                     WORKING_DIRECTORY "${boost_root}")
             else ()
 
                 execute_process(COMMAND "./bootstrap.sh" 
                     WORKING_DIRECTORY "${boost_root}")
             
-                execute_process(COMMAND "./b2 ${B2_FLAGS}"
-                    WORKING_DIRECTORY "${boost_root}"
-                    COMMAND_ECHO STDOUT
-                    OUTPUT_STRIP_TRAILING_WHITESPACE)
+                execute_process(COMMAND "./b2"  ${B2_FLAGS}
+                    WORKING_DIRECTORY "${boost_root}")
             endif ()
 
             if (EXISTS "${BOOST_LINK_DIR}")
-                message("Boost built successfully")
+                message(STATUS "Boost built successfully")
             endif()
 
         else ()

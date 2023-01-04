@@ -60,3 +60,11 @@ modules which have differing licenses:
 - spdlog: MIT license
 - Boost (Boost.stacktrace): Boost Software License v1
 - Catch2 (for tests only): Boost Software License v1
+
+# Developpement
+Developpement should be done through the Spirit super-project at 
+https://github.com/Matthieu-Beauchamp/Spirit since it includes
+the .clang-format and allows for easy toggling of internal targets per module.
+
+Issues for modules should still be posted per-module and not on the 
+Spirit repository.
