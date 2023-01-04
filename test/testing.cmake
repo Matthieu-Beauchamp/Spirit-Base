@@ -6,7 +6,7 @@ include(CTest)
 
 include(Catch)
 
-macro(spirit_add_test testName spiritLib ...)
+macro(spirit_add_test spiritLib testName ...)
     add_executable(${testName} ${...})
     target_include_directories(${testName} PRIVATE Catch2/src/)
     target_link_libraries(${testName} PRIVATE ${spiritLib} Catch2::Catch2WithMain)
