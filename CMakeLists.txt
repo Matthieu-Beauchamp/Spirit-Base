@@ -55,16 +55,6 @@ spirit_define_option(
         "Select if examples should be built"
 )
 
-
-get_directory_property(hasParent PARENT_DIRECTORY)
-if(hasParent)
-else() # Root project -> dev build
-    set(SPIRIT_BASE_BUILD_TESTS TRUE)
-    set(SPIRIT_BASE_BUILD_DOCS TRUE)
-    set(SPIRIT_BASE_BUILD_EXAMPLES TRUE)
-endif()
-
-
 ############################################################
 # Paths
 ############################################################
@@ -77,17 +67,6 @@ set(SPIRIT_BASE_INCLUDE_DIR ${SPIRIT_BASE_ROOT}/include)
 set(SPIRIT_BASE_SRC_DIR ${SPIRIT_BASE_ROOT}/src/SPIRIT)
 set(SPIRIT_BASE_TEST_DIR ${SPIRIT_BASE_ROOT}/test)
 
-# OS
-# The CMake system check are more reliable than the C++ macros
-#   when using Clang or Cygwin on windows for examples -> __linux__
-if (${CMAKE_SYSTEM_NAME} MATCHES "Windows")
-    add_compile_definitions(SPIRIT_OS_WINDOWS)
-elseif(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
-    add_compile_definitions(SPIRIT_OS_LINUX)
-elseif(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
-    add_compile_definitions(SPIRIT_OS_MACOSX)
-endif()
-
 
 ############################################################
 # Build
@@ -95,12 +74,24 @@ endif()
 spirit_update_submodules(${SPIRIT_BASE_ROOT})
 add_library(spirit-base "")
 
+# OS
+# The CMake system check are more reliable than the C++ macros
+#   when using Clang or Cygwin on windows for examples -> __linux__
+if (${CMAKE_SYSTEM_NAME} MATCHES "Windows")
+    target_compile_definitions(spirit-base PUBLIC SPIRIT_OS_WINDOWS)
+elseif(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
+    target_compile_definitions(spirit-base PUBLIC SPIRIT_OS_LINUX)
+elseif(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+    target_compile_definitions(spirit-base PUBLIC SPIRIT_OS_MACOSX)
+endif()
+
 if (${CMAKE_SYSTEM_NAME} MATCHES "Windows")
     if(${MSVC})
         # Unwinding semantics disabled otherwise (Can't compile Error class)
         target_compile_options(spirit-base "/EHsc")
     endif()
 endif()
+
 
 # Dependencies #############################################
 include(build_extLibs)
@@ -127,14 +118,33 @@ foreach (COMPONENT ${SPIRIT_BASE_COMPONENTS})
 endforeach ()
 
 
-if (SPIRIT_BASE_BUILD_TESTS)
-    add_subdirectory(${SPIRIT_BASE_TEST_DIR})
-endif ()
-
 if (SPIRIT_BASE_BUILD_DOCS)
     add_subdirectory("${SPIRIT_BASE_ROOT}/docs/")
 endif ()
 
 if (SPIRIT_BASE_BUILD_EXAMPLES)
     add_subdirectory("${SPIRIT_BASE_ROOT}/examples/")
+endif ()
+
+
+# We always need to build/provide catch for other modules which may build tests
+# This need to be seen by FetchContent even if we don't build tests
+
+spirit_define_option(SPIRIT_BASE_BUILD_CATCH
+    ${SPIRIT_BASE_BUILD_TESTS} BOOL
+    "True to expose the Catch2 testing framework and spirit's testing macros"
+)
+
+if (SPIRIT_BASE_BUILD_CATCH OR SPIRIT_BASE_BUILD_TESTS)
+    # May require configuring more than once because of the 
+    # catch_user_config.hpp header generation
+    add_subdirectory(test/Catch2)
+
+    list(APPEND CMAKE_MODULE_PATH Catch2/extras)
+
+    include(testing)
+endif()
+
+if (SPIRIT_BASE_BUILD_TESTS)
+    add_subdirectory(${SPIRIT_BASE_TEST_DIR})
 endif ()
