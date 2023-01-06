@@ -10,3 +10,6 @@
 [submodule "docs/Spirit-Doxygen"]
 	path = docs/Spirit-Doxygen
 	url = https://github.com/Matthieu-Beauchamp/Spirit-Doxgen
+[submodule "benchmarks/Celero"]
+	path = benchmarks/Celero
+	url = https://github.com/DigitalInBlue/Celero

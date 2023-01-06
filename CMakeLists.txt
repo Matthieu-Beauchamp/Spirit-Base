@@ -44,6 +44,12 @@ spirit_define_option(
 )
 
 spirit_define_option(
+        SPIRIT_BASE_BUILD_BENCHMARKS
+        FALSE BOOL
+        "Select if benchmarks should be built"
+)
+
+spirit_define_option(
         SPIRIT_BASE_BUILD_DOCS
         FALSE BOOL
         "Select if docs should be built"
@@ -65,7 +71,6 @@ set(LIBRARY_OUTPUT_PATH ${EXECUTABLE_OUTPUT_PATH}/lib)
 
 set(SPIRIT_BASE_INCLUDE_DIR ${SPIRIT_BASE_ROOT}/include)
 set(SPIRIT_BASE_SRC_DIR ${SPIRIT_BASE_ROOT}/src/SPIRIT)
-set(SPIRIT_BASE_TEST_DIR ${SPIRIT_BASE_ROOT}/test)
 
 
 ############################################################
@@ -127,14 +132,7 @@ if (SPIRIT_BASE_BUILD_EXAMPLES)
 endif ()
 
 
-# We always need to build/provide catch for other modules which may build tests
-# This need to be seen by FetchContent even if we don't build tests
-
-spirit_define_option(SPIRIT_BASE_BUILD_CATCH
-    ${SPIRIT_BASE_BUILD_TESTS} BOOL
-    "True to expose the Catch2 testing framework and spirit's testing macros"
-)
-
+# Expose testing facilities
 if (SPIRIT_BASE_BUILD_CATCH OR SPIRIT_BASE_BUILD_TESTS)
     # May require configuring more than once because of the 
     # catch_user_config.hpp header generation
@@ -146,5 +144,19 @@ if (SPIRIT_BASE_BUILD_CATCH OR SPIRIT_BASE_BUILD_TESTS)
 endif()
 
 if (SPIRIT_BASE_BUILD_TESTS)
-    add_subdirectory(${SPIRIT_BASE_TEST_DIR})
+    add_subdirectory("${SPIRIT_BASE_ROOT}/test")
+endif ()
+
+
+# Expose benchmarking facilities
+if (SPIRIT_BASE_BUILD_CELERO OR SPIRIT_BASE_BUILD_BENCHMARKS)
+    # May require configuring more than once because of the 
+    # catch_user_config.hpp header generation
+    add_subdirectory(benchmarks/Celero)
+
+    include(benchmarking)
+endif()
+
+if (SPIRIT_BASE_BUILD_BENCHMARKS)
+    add_subdirectory("${SPIRIT_BASE_ROOT}/benchmarks")
 endif ()
