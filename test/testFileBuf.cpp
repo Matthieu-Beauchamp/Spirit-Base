@@ -88,6 +88,43 @@ TEST_CASE("basic_streambuf behavior of FileBuffer", "[FileBuffer]")
         REQUIRE(memcmp(expected.data(), got.data(), expected.size()) == 0);
     }
 
+    SECTION("Multiple Output")
+    {
+        // When implementing the optimized xsputn method,
+        // when encountering big blocks we output them instantly
+        // (avoids unnecessary transfers to/from buffer)
+        // but when forgot to clear the buffer first
+
+        FILE * f = fopen("tempOut.txt", "w+");
+
+        sp::details::OutFileBuf filebuf{f};
+        std::string txt = allChars;
+
+        constexpr std::size_t nBlocks = 4;
+        std::size_t offsets[nBlocks + 1]{0, 1, 15, 175, txt.size()};
+        static_assert(
+            175 - 15 > sp::details::OutFileBuf::bufferSize,
+            "Must be considered a big block"
+        );
+
+        for (std::size_t i = 0; i < nBlocks; ++i)
+        {
+            std::size_t start = offsets[i];
+            std::size_t blockSize = offsets[i+1] - start;
+            REQUIRE(filebuf.sputn(txt.c_str() + start, blockSize) == blockSize);
+        }
+        filebuf.pubsync();
+
+        std::vector<char> got{};
+        got.resize(txt.size());
+        fseek(f, 0, SEEK_SET); // moves f's cursor ()
+        fread(got.data(), sizeof(char), txt.size(), f);
+        fclose(f);
+
+        REQUIRE(memcmp(txt.data(), got.data(), txt.size()) == 0);
+    }
+
+
     SECTION("Input")
     {
         FILE * f = fopen("tempIn.txt", "w+");
@@ -162,7 +199,7 @@ TEST_CASE("basic_streambuf behavior of FileBuffer", "[FileBuffer]")
             std::wstring ws{};
             for (char c : s)
             {
-                // fails if not unsigned, for the allChars str, 
+                // fails if not unsigned, for the allChars str,
                 // => \255 becomes EOF and a character is missed for every iteration
                 ws.push_back((wchar_t)(unsigned char)c);
             }

@@ -262,6 +262,8 @@ public:
     typedef typename sp::details::FileBufBase<char_type>::pos_type pos_type;
     typedef typename sp::details::FileBufBase<char_type>::off_type off_type;
 
+    static constexpr std::streamsize bufferSize = bufSize;
+
     static_assert(bufSize > 0, "Requires at least a single char slot in buffer");
 
 
@@ -369,6 +371,7 @@ protected:
     {
         if (n > bufSize)
         {
+            this->overflow(traits_type::eof());
             std::streamsize wrote = Base::write(str, io.out.pos, n);
             io.out.pos += wrote;
             return wrote;

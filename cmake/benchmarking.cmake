@@ -6,6 +6,7 @@ macro(spirit_benchmark spiritLib targetName ...)
     add_executable(${targetName} ${...})
     celero_include_internal(${targetName})
     target_link_libraries(${targetName} celero)
+    target_link_libraries(${targetName} ${spiritLib})
 
     set(benchSrcsVar ${spiritLib}-benchSrcs)
     set(${benchSrcsVar} ${${benchSrcsVar}} ${targetName})
