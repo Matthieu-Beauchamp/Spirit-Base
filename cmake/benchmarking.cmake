@@ -54,7 +54,7 @@ macro(spirit_analyse_benchmarks spiritLib outputDir)
     endforeach()
           
     add_custom_target(
-        ${spiritLib}-benchmarks ALL
+        ${spiritLib}-benchmarks
         DEPENDS ${htmls}
     )
 endmacro()
