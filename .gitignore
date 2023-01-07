@@ -3,6 +3,7 @@
 .git # ?
 
 docs/Out
+benchmarks/out
 
 **/doc/**
 **/latex/**

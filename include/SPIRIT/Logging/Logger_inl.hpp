@@ -83,9 +83,9 @@ AnsiStreamSink<Stream, Mutex>::sink_it_(const spdlog::details::log_msg & msg)
         // before color range
         write(formatted, 0, msg.color_range_start);
         // in color range
-        // *this << levelColors[msg.level];
+        *this << levelColors[msg.level];
         write(formatted, msg.color_range_start, msg.color_range_end);
-        // *this << sp::reset;
+        *this << sp::reset;
         // after color range
         write(formatted, msg.color_range_end, formatted.size());
     }

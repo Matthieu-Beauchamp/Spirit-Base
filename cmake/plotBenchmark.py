@@ -33,7 +33,9 @@ class Benchmark:
     def __init__(self, csvTable) -> None:
 
         # TODO: May break on different benchmark types (ie without Problem Space)
-
+        # TODO: Should show the number of iterations and total time
+        # TODO: Table is incorrect for multiple groups
+        
         # csv file ref
         # https://github.com/DigitalInBlue/Celero
         kept = [

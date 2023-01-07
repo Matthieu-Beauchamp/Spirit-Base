@@ -31,6 +31,9 @@ endfunction()
 
 
 # outputDir should be an absolute path
+# TODO: Running all benchmarks is wayyy too long ... (also it runs multiple benchmarks in parallel => unfair benchmarks)
+#   - check if csv exists -> only plot else compute first (but then it will never updated)
+#   - make separate targets for each benchmark (litters the cmake targets)
 macro(spirit_analyse_benchmarks spiritLib outputDir)
     set(benchSrcsVar ${spiritLib}-benchSrcs)
     # call script on all
