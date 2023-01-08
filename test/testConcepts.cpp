@@ -1,4 +1,4 @@
-#include "SPIRIT/Concepts/Concepts.hpp"
+#include "SPIRIT/Base/Concepts/Concepts.hpp"
 #include "catch2/catch_test_macros.hpp"
 
 struct A

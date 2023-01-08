@@ -26,7 +26,7 @@
 #ifndef SPIRIT_FORMAT_HPP
 #define SPIRIT_FORMAT_HPP
 
-#include "SPIRIT/Concepts/Concepts.hpp"
+#include "SPIRIT/Base/Concepts/Concepts.hpp"
 #include "spdlog/fmt/fmt.h"
 #include "spdlog/fmt/ostr.h" // needs to be included for operator<< resolution
 

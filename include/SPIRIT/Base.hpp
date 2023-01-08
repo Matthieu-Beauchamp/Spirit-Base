@@ -43,13 +43,13 @@
 ////////////////////////////////////////////////////////////
 
 
-#include "Configuration/config.hpp"
+#include "Base/Configuration/config.hpp"
 
-#include "Logging/Logging.hpp"
+#include "Base/Logging/Logging.hpp"
 
 // include utils?
 
-#include "Error/Error.hpp"
+#include "Base/Error/Error.hpp"
 
 
 #endif // SPIRIT_BASE_HPP

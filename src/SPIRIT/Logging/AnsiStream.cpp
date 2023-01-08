@@ -23,7 +23,7 @@
 ////////////////////////////////////////////////////////////
 
 
-#include "SPIRIT/Logging/AnsiStream.hpp"
+#include "SPIRIT/Base/Logging/AnsiStream.hpp"
 
 #include "spdlog/details/os.h"
 

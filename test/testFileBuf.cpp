@@ -1,4 +1,4 @@
-#include "SPIRIT/Logging/details/FileBuf.hpp"
+#include "SPIRIT/Base/Logging/details/FileBuf.hpp"
 #include "catch2/catch_all.hpp"
 
 #include <stdio.h>

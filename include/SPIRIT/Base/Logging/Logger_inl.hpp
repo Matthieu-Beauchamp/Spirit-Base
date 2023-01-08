@@ -27,7 +27,7 @@
 #define SPIRIT_LOGGER_INL_HPP
 
 #include "Logger.hpp"
-#include "SPIRIT/Error/Error.hpp"
+#include "SPIRIT/Base/Error/Error.hpp"
 #include "spdlog/pattern_formatter.h"
 
 namespace sp

@@ -25,8 +25,8 @@
 #ifndef SPIRIT_ENGINE_ERROR_HPP
 #define SPIRIT_ENGINE_ERROR_HPP
 
-#include "SPIRIT/Configuration/config.hpp"
-#include "SPIRIT/Logging/Format.hpp"
+#include "SPIRIT/Base/Configuration/config.hpp"
+#include "SPIRIT/Base/Logging/Format.hpp"
 
 #include <exception>
 

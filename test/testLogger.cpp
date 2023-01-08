@@ -1,4 +1,4 @@
-#include "SPIRIT/Logging/Logger.hpp"
+#include "SPIRIT/Base/Logging/Logger.hpp"
 #include "catch2/catch_test_macros.hpp"
 
 struct UserDefined

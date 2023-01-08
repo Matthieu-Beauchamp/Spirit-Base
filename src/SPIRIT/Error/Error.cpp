@@ -23,7 +23,7 @@
 ////////////////////////////////////////////////////////////
 
 
-#include "SPIRIT/Error/Error.hpp"
+#include "SPIRIT/Base/Error/Error.hpp"
 
 // #include <stacktrace> // in C++23
 #include "boost/stacktrace.hpp"

@@ -22,7 +22,7 @@
 //
 ////////////////////////////////////////////////////////////
 
-#include "SPIRIT/Logging/Logger.hpp"
+#include "SPIRIT/Base/Logging/Logger.hpp"
 
 namespace sp
 {

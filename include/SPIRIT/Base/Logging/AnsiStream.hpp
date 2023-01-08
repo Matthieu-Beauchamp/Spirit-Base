@@ -26,9 +26,9 @@
 #ifndef SPIRIT_ANSISTREAM_HPP
 #define SPIRIT_ANSISTREAM_HPP
 
-#include "SPIRIT/Configuration/config.hpp"
+#include "SPIRIT/Base/Configuration/config.hpp"
 #include "AnsiEscape.hpp"
-#include "SPIRIT/Concepts/Concepts.hpp"
+#include "SPIRIT/Base/Concepts/Concepts.hpp"
 #include "details/FileBuf.hpp"
 
 #include <memory>
@@ -119,7 +119,8 @@ public:
     ////////////////////////////////////////////////////////////
     template <class... StreamArgs>
     AnsiStreamWrapper(bool enableAnsi, StreamArgs &&... args)
-        : inner{std::forward<StreamArgs>(args)...}, areSequencesEnabled{enableAnsi}
+        : inner{std::forward<StreamArgs>(args)...}, areSequencesEnabled{
+                                                        enableAnsi}
     {
     }
 
@@ -335,6 +336,7 @@ public:
     }
 
 private:
+
     // use setAnsiMode instead
     using Wrapper::enableAnsi;
 };

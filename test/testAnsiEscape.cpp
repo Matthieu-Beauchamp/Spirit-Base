@@ -1,4 +1,4 @@
-#include "SPIRIT/Logging/AnsiEscape.hpp"
+#include "SPIRIT/Base/Logging/AnsiEscape.hpp"
 #include "catch2/catch_test_macros.hpp"
 
 TEST_CASE("Ansi Escapes")
