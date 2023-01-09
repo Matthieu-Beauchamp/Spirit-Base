@@ -30,7 +30,12 @@
 #include "SPIRIT/Base/Logging/Format.hpp"
 #include "spdlog/logger.h"
 
-#include <experimental/source_location>
+// TODO: How do we deal with this?
+#ifdef __GNUC__ 
+    #include <experimental/source_location> // on gcc 12
+#else
+    #include <source_location>              // msvc 19.34
+#endif
 
 namespace sp
 {
@@ -43,9 +48,14 @@ namespace details
 template <LogLevel lvl>
 class MessageBase
 {
-    typedef std::experimental::source_location SourceLocation;
-
 public:
+
+#ifdef __GNUC__ 
+    typedef std::experimental::source_location SourceLocation; // on gcc 12
+#else
+    typedef std::source_location SourceLocation; // msvc 19.34
+#endif
+
 
     MessageBase(std::string && str, SourceLocation loc)
         : msg{std::move(str)}, loc{loc}

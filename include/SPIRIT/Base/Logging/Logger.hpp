@@ -132,6 +132,10 @@ spiritLog()
 // TODO: Naming is not great below...
 
 
+
+#pragma warning( push )
+#pragma warning( disable : 4251 ) // tuple needs to have dll interface
+
 ////////////////////////////////////////////////////////////
 /// \ingroup Loggers
 /// \brief Defines how the color range for a given LogLevel is displayed
@@ -155,6 +159,9 @@ public:
     {
     }
 };
+
+#pragma warning ( pop )
+
 
 ////////////////////////////////////////////////////////////
 /// \ingroup Loggers

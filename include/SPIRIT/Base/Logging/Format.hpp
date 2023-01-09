@@ -77,6 +77,8 @@ format(const T & printable)
     return sp::format("{}", printable);
 }
 
+inline std::string format() {return "";}
+
 
 } // namespace sp
 

@@ -219,8 +219,8 @@ struct Bases<B, Bs...>
     template <class... Ts>
     struct BasesOf
     {
-        typedef typename Bases<Bs...>::BasesOf<Ts...>::Bases_t SkipThisOne;
-        typedef typename SkipThisOne::prepend<B> Continue;
+        typedef typename Bases<Bs...>::template BasesOf<Ts...>::Bases_t SkipThisOne;
+        typedef typename SkipThisOne::template prepend<B> Continue;
 
         typedef std::conditional_t<sp::traits::areOfBaseType<B, Ts...>::value, Continue, SkipThisOne>
             Bases_t;
@@ -276,7 +276,7 @@ struct Bases
 {
     template <class... Ts>
     using DeepestOf =
-        typename details::Bases<Bs...>::DeepestBaseOf<Ts...>::DeepestBaseOf_t;
+        typename details::Bases<Bs...>::template DeepestBaseOf<Ts...>::DeepestBaseOf_t;
 };
 
 

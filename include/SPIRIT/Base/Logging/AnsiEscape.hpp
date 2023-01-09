@@ -73,17 +73,24 @@ toStr(Esc && esc)
 /// 
 ////////////////////////////////////////////////////////////
 template <class... Args>
-class Escapes : traits::EscapeType<Args...>, public std::tuple<Args...>
+class Escapes : traits::EscapeType<Args...>
 {
-public:
+    // TODO: MSVC gives a bunch of warning saying that std::tuple needs to have
+    //  dll interface for clients of ... to be used
 
-    using std::tuple<Args...>::tuple;
+public:
+    template<class... CtorArgs>
+    constexpr Escapes(CtorArgs&&... args) : tup{std::forward<CtorArgs>(args)...}{}
 
     friend std::ostream &
     operator<<(std::ostream & os, const Escapes & e)
     {
-        return ((os << std::get<Args>(e)), ...);
+        return ((os << std::get<Args>(e.tup)), ...);
     }
+
+private:
+    std::tuple<Args...> tup;
+
 };
 
 // deduction

@@ -27,7 +27,6 @@
 #define SPIRIT_TIMER_HPP
 
 #include <chrono>
-#include "SPIRIT/Base.hpp"
 
 
 namespace sp

@@ -30,6 +30,7 @@ set(CMAKE_CXX_FLAGS ${SPIRIT_COMPILE_FLAGS})
 
 # Options
 
+# todo: the automatic dll copying was removed, redo the spirit_add_executable macro
 spirit_define_option(
         BUILD_SHARED_LIBS
         FALSE BOOL
@@ -93,7 +94,7 @@ endif()
 if (${CMAKE_SYSTEM_NAME} MATCHES "Windows")
     if(${MSVC})
         # Unwinding semantics disabled otherwise (Can't compile Error class)
-        target_compile_options(spirit-base "/EHsc")
+        target_compile_options(spirit-base PUBLIC "/EHsc")
     endif()
 endif()
 
@@ -108,6 +109,9 @@ build_Boost(${SPIRIT_BASE_ROOT}/ext_libs/boost spirit-base)
 
 # For Windows dll exports/imports (SPIRIT_API macro)
 # Will this work when other modules will include / link to it?
+if (${BUILD_SHARED_LIBS})
+    target_compile_definitions(spirit-base PRIVATE SPIRIT_SHARED_LIBS)
+endif()
 target_compile_definitions(spirit-base PRIVATE SPIRIT_EXPORT)
 
 target_include_directories(spirit-base PUBLIC ${SPIRIT_BASE_INCLUDE_DIR})

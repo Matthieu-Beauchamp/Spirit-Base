@@ -68,7 +68,12 @@ spiritLogger()
     {
         constexpr sp::RgbFgColor lightBlue{66, 230, 245};
         constexpr sp::RgbFgColor pink{245, 66, 212};
-        std::string name = sp::format("{}{}", sp::bold, sp::FgGradient("Spirit", lightBlue, pink));
+        std::string name = sp::format(
+            "{}{}{}", 
+            sp::bold, 
+            sp::FgGradient("Spirit", lightBlue, pink, false), 
+            sp::reset
+        );
 
         logger = makeLogger<sp::AnsiFileSink_mt>(name, stdout);
 

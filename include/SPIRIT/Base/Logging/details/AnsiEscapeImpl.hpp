@@ -277,7 +277,7 @@ public:
         std::size_t nSteps = text.size() - 1;
         for (sp::Int32 i = 0; i < 3; ++i)
         {
-            float deltaCol = last[i] - first[i];
+            float deltaCol = static_cast<float>(last[i] - first[i]);
             step[i]        = deltaCol / nSteps;
         }
 

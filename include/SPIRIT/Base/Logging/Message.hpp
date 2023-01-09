@@ -74,41 +74,27 @@ using LogLevel = spdlog::level::level_enum;
 template <LogLevel lvl, class... Args>
 class Message : public sp::details::MessageBase<lvl>
 {
-    typedef std::experimental::source_location SourceLocation;
     typedef sp::details::MessageBase<lvl> Base;
+    typedef typename Base::SourceLocation SourceLocation;
 
 public:
-
-    Message(SourceLocation loc = SourceLocation::current()) : Base{"", loc} {}
-
+    /// Anything that can be passed to sp::format, including nothing:
+    /// \code sp::Message{} \endcode
+    /// \code sp::Message{MyPrintableType{}} \endcode
+    /// \code sp::Message{"hello!"} \endcode
+    /// \code sp::Message{"hello {}!", yourName} \endcode
     Message(
-        std::string_view msg,
         Args &&... args,
         SourceLocation loc = SourceLocation::current()
     )
-        : Base{sp::format(msg, std::forward<Args>(args)...), loc}
+        : Base{sp::format(std::forward<Args>(args)...), loc}
     {
     }
 
-    // // T cannot be statically converted to format string (including string_view/wstring_view)
-    template <
-        class T,
-        std::enable_if_t<!spdlog::is_convertible_to_any_format_string<T>::value, int> = 0>
-    Message(const T & msg, SourceLocation loc = SourceLocation::current())
-        : Base{sp::format("{}", msg), loc}
-    {
-    }
 };
 
-// Deduction Guides
-template <LogLevel lvl>
-Message() -> Message<lvl>;
-
-template <LogLevel lvl, class T>
-Message(T &&) -> Message<lvl>;
-
 template <LogLevel lvl, class... Args>
-Message(std::string_view, Args &&...) -> Message<lvl, Args...>;
+Message(Args &&...) -> Message<lvl, Args...>;
 
 
 ////////////////////////////////////////////////////////////

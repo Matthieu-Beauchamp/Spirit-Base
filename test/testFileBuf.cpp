@@ -31,6 +31,8 @@ TEST_CASE("basic_streambuf behavior of FileBuffer", "[FileBuffer]")
 
 
     int nRepeats = 50;
+
+    // TODO: Oops fails on windows (\n -> \r\n)
     std::vector<std::string> strs{
         "Hello",
         nullCharInside,

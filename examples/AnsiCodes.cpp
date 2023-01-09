@@ -1,5 +1,4 @@
 #include "SPIRIT/Base.hpp"
-#include "SPIRIT/Utils/Time/Clock.hpp"
 
 #include <thread>
 

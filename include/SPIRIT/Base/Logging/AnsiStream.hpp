@@ -41,7 +41,7 @@ namespace sp
 namespace details
 {
 
-class FileStream : public std::ostream
+class SPIRIT_API FileStream : public std::ostream
 {
 public:
 

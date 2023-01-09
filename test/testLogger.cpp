@@ -42,8 +42,8 @@ TEST_CASE("Messages")
     SECTION("Source location")
     {
         REQUIRE(sp::Info{}.sourceLoc().line() == __LINE__);
-        REQUIRE(sp::Info{}.sourceLoc().function_name() == __FUNCTION__);
-        REQUIRE(std::string{sp::Info{}.sourceLoc().file_name()} == __FILE__);
+        REQUIRE(std::string{sp::Info{}.sourceLoc().function_name()} == std::string{__FUNCTION__});
+        REQUIRE(std::string{sp::Info{}.sourceLoc().file_name()} == std::string{__FILE__});
     }
 }
 
@@ -109,16 +109,30 @@ TEST_CASE("File Sinks")
             // Note that spdlog adds a newline after each message
             logger.set_pattern("[%n][%l]\n%v");
             logger << sp::Info{"An interesting message"};
+
+            #ifdef SPIRIT_OS_WINDOWS
             REQUIRE(
-                sink->stream().str() == "[Logger][info]\nAn interesting message\n"
-            );
+                sink->stream().str() == std::string{"[Logger][info]\nAn interesting message\r\n"}
+                );
+            #else
+            REQUIRE(
+                sink->stream().str() == std::string{"[Logger][info]\nAn interesting message\n"}
+                );
+            #endif
 
             sink->stream().str("");
             logger.set_pattern("%v");
             logger << sp::Critical{"Danger!"};
+
+            #ifdef SPIRIT_OS_WINDOWS
             REQUIRE(
-                sink->stream().str() == "Danger!\n"
-            );
+                sink->stream().str() == std::string{"Danger!\r\n"}
+                );
+            #else
+            REQUIRE(
+                sink->stream().str() == std::string{"Danger!\n"}
+                );
+            #endif
         }
     }
 

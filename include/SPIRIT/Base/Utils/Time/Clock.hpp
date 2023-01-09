@@ -26,6 +26,7 @@
 #ifndef SPIRIT_CLOCK_HPP
 #define SPIRIT_CLOCK_HPP
 
+#include "SPIRIT/Base/Configuration/config.hpp"
 #include "Timer.hpp"
 #include <queue>
 
@@ -38,17 +39,6 @@ class Clock
 public:
 
     typedef std::chrono::nanoseconds Nanoseconds;
-
-private:
-
-    Timer timer{};
-
-    Nanoseconds tickPeriod{0}; // don't wait on ticks
-
-    // TODO: use a circular buffer instead
-    std::deque<Nanoseconds> ticks{};
-
-public:
 
     Clock(Nanoseconds minimumTickPeriod = Nanoseconds{0});
 
@@ -72,6 +62,14 @@ public:
     {
         return this->tickPeriod;
     }
+
+private:
+    Timer timer{};
+
+    Nanoseconds tickPeriod{0}; // don't wait on ticks
+
+    // TODO: use a circular buffer instead
+    std::deque<Nanoseconds> ticks{};
 };
 
 

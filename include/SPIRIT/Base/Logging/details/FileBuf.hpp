@@ -26,6 +26,7 @@
 #ifndef SPIRIT_FILEBUF_HPP
 #define SPIRIT_FILEBUF_HPP
 
+#include "SPIRIT/Base/Configuration/config.hpp"
 #include <array>
 #include <stdio.h>
 #include <streambuf>
@@ -91,7 +92,7 @@ protected:
         case std::ios_base::cur: Cpos = SEEK_CUR; break;
         case std::ios_base::end: Cpos = SEEK_END; break;
         }
-        fseek(targetFile, offset * sizeof(char_type), Cpos);
+        fseek(targetFile, static_cast<sp::Int32>(offset * sizeof(char_type)), Cpos);
 
         return ftell(targetFile) / sizeof(char_type);
     }
@@ -133,15 +134,15 @@ protected:
     //  n is the number of char_type to read
     ////////////////////////////////////////////////////////////
 
-    std::streamsize
-    read(char_type * dest, pos_type seekPos, std::streamsize n)
+    std::size_t
+    read(char_type * dest, pos_type seekPos, std::size_t n)
     {
         seekpos(seekPos, std::ios_base::in);
         return fread(dest, sizeof(char_type), n, targetFile);
     }
 
-    std::streamsize
-    write(const char_type * src, pos_type seekPos, std::streamsize n)
+    std::size_t
+    write(const char_type * src, pos_type seekPos, std::size_t n)
     {
         seekpos(seekPos, std::ios_base::out);
         return fwrite(src, sizeof(char_type), n, targetFile);
@@ -175,7 +176,24 @@ private:
 template <std::streamsize bufSize, typename char_type>
 struct ioBuffer
 {
-    std::array<char_type, bufSize> buf;
+private:
+    struct array : public std::array<char_type, bufSize>
+    {
+        typedef std::array<char_type, bufSize> Base;
+        // typedef iterator types and stuff...
+        
+        using Base::Base;
+
+        // MSVC won't convert std::array's begin and end to T*
+        char_type * begin() {return this->data();}
+        const char_type * begin() const {return this->data();}
+
+        char_type * end() {return this->data() + this->size();}
+        const char_type * end() const {return this->data() + this->size();}
+    };
+
+public:
+    array buf;
     std::streamsize pos = 0;
 };
 
@@ -250,7 +268,7 @@ struct ioBuffers<std::ios_base::in | std::ios_base::out, bufSize, char_type>
 ///
 ////////////////////////////////////////////////////////////
 template <std::ios_base::openmode mode, std::streamsize bufSize, typename char_type>
-class FileBuf : public sp::details::FileBufBase<char_type>
+class SPIRIT_API FileBuf : public sp::details::FileBufBase<char_type>
 {
     typedef sp::details::FileBufBase<char_type> Base;
 
@@ -372,7 +390,7 @@ protected:
         if (n > bufSize)
         {
             this->overflow(traits_type::eof());
-            std::streamsize wrote = Base::write(str, io.out.pos, n);
+            std::streamsize wrote = Base::write(str, io.out.pos, static_cast<std::size_t>(n));
             io.out.pos += wrote;
             return wrote;
         }
@@ -427,23 +445,23 @@ constexpr static std::streamsize bufSizeDefault = 128;
 typedef char charTypeDefault;
 typedef wchar_t wCharTypeDefault;
 
-typedef sp::details::FileBuf<std::ios_base::out, bufSizeDefault, charTypeDefault>
+typedef SPIRIT_API sp::details::FileBuf<std::ios_base::out, bufSizeDefault, charTypeDefault>
     OutFileBuf;
 
-typedef sp::details::FileBuf<std::ios_base::in, bufSizeDefault, charTypeDefault>
+typedef SPIRIT_API sp::details::FileBuf<std::ios_base::in, bufSizeDefault, charTypeDefault>
     InFileBuf;
 
-typedef sp::details::
+typedef SPIRIT_API sp::details::
     FileBuf<std::ios_base::in | std::ios_base::out, bufSizeDefault, charTypeDefault>
         IOFileBuf;
 
-typedef sp::details::FileBuf<std::ios_base::out, bufSizeDefault, wCharTypeDefault>
+typedef SPIRIT_API sp::details::FileBuf<std::ios_base::out, bufSizeDefault, wCharTypeDefault>
     wOutFileBuf;
 
-typedef sp::details::FileBuf<std::ios_base::in, bufSizeDefault, wCharTypeDefault>
+typedef SPIRIT_API sp::details::FileBuf<std::ios_base::in, bufSizeDefault, wCharTypeDefault>
     wInFileBuf;
 
-typedef sp::details::
+typedef SPIRIT_API sp::details::
     FileBuf<std::ios_base::in | std::ios_base::out, bufSizeDefault, wCharTypeDefault>
         wIOFileBuf;
 

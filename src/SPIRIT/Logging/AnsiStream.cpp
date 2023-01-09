@@ -29,7 +29,10 @@
 
 #include <stdio.h>
 
-// TODO: Include windows...
+#ifdef SPIRIT_OS_WINDOWS
+    #include <Windows.h>
+    #include <io.h>
+#endif
 
 namespace sp
 {
@@ -38,38 +41,33 @@ sp::AnsiFileStream ansiOut{stdout};
 sp::AnsiFileStream ansiErr{stderr};
 
 
-// TODO: Does not check for given file!
-// https://learn.microsoft.com/en-us/windows/console/console-virtual-terminal-sequences#samples
-// incomplete, we if ostream is std::cerr or std::clog, theyre not the same as stdout
-//
 // TODO: SEE: https://github.com/agauniyal/rang
 //  better checking (ie msys, pipes, ...) and the native windows API usage
 bool
 enableVirtualTerminal(FILE * file)
 {
 #if defined(SPIRIT_OS_WINDOWS)
-    // Set output mode to handle virtual terminal sequences
-    // TODO: Once on windows, change this to use _fileno(file)
-    HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
+
+    // https://learn.microsoft.com/en-us/cpp/c-runtime-library/reference/get-osfhandle
+    HANDLE hOut = (HANDLE)_get_osfhandle(_fileno(file));
+    if (hOut == (HANDLE)-2)
+        return false;
     
     if (hOut == INVALID_HANDLE_VALUE)
     {
         return false;
-        // return GetLastError();
     }
 
     DWORD dwMode = 0;
     if (!GetConsoleMode(hOut, &dwMode))
     {
         return false;
-        // return GetLastError();
     }
 
     dwMode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
     if (!SetConsoleMode(hOut, dwMode))
     {
         return false;
-        // return GetLastError();
     }
 
     return true;

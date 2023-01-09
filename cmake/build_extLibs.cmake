@@ -7,7 +7,7 @@ include(Macros)
 function(build_spdlog spdlog_root target)
 add_subdirectory(${spdlog_root})
     target_include_directories(${target} PUBLIC ${spdlog_root}/include)
-    target_link_libraries(${target} spdlog)
+    target_link_libraries(${target} PUBLIC spdlog)
 endfunction()
 
 
@@ -16,12 +16,22 @@ endfunction()
 ############################################################
 function(build_Boost boost_root target)
     # Currently public for testLogger using boost::source_location
-    target_include_directories(spirit-base PUBLIC ${boost_root})
+    target_include_directories(spirit-base PRIVATE ${boost_root})
 
-    set(B2_FLAGS "")
+    set(B2_FLAGS --with-stacktrace)
+
+    if (${BUILD_SHARED_LIBS})
+        set(B2_FLAGS ${B2_FLAGS} link=shared)    
+    else()
+        set(B2_FLAGS ${B2_FLAGS} link=static)    
+    endif()
+
+    # TODO: Use the same compiler ...
+
     macro(compileFlag flag)
         target_compile_definitions(${target} PRIVATE ${flag})
         set(B2_FLAGS ${B2_FLAGS} cxxflags=-D${flag})    
+        set(B2_FLAGS ${B2_FLAGS} --layout=tagged)    
     endmacro()
 
     set(BOOST_LINK_DIR "${boost_root}/stage/lib")
@@ -29,10 +39,8 @@ function(build_Boost boost_root target)
     compileFlag(BOOST_STACKTRACE_LINK)
     if (${MSVC})
         compileFlag(BOOST_STACKTRACE_USE_WINDBG)
-        set(LIB_NAME boost_stacktrace_windbg)
     else()
         compileFlag(BOOST_STACKTRACE_USE_BACKTRACE)
-        set(LIB_NAME boost_stacktrace_backtrace)
     endif()
 
     if (NOT EXISTS "${BOOST_LINK_DIR}")
@@ -65,7 +73,20 @@ function(build_Boost boost_root target)
     endif ()
 
     # Public for shared libraries..?
-    target_link_directories(${target} PUBLIC "${BOOST_LINK_DIR}")
-    target_link_libraries(${target} ${LIB_NAME})
+    target_link_directories(${target} PUBLIC "${BOOST_LINK_DIR}") # Insists on linking other targets with msvc
+    # message(STATUS "${CMAKE_BUILD_TYPE} => ${LIB_NAME}")
+
+    # TODO: b2 with msvc builds about a dozen of these, and then CMake 
+    # cannot link to simply "boost_stacktrace_windbg".
+    # Here we choose one, this is not portable. 
+    # If we can detect if building for x86 or x64, we could at least adapt a bit more
+    if (${CMAKE_SYSTEM_NAME} MATCHES "Windows")
+    	target_link_libraries(${target} PUBLIC 
+    	    $<IF:$<CONFIG:Debug>, libboost_stacktrace_windbg-mt-gd-x64, 
+    	                          libboost_stacktrace_windbg-mt-x64>
+    	    )
+    else()
+        target_link_libraries(${target} PUBLIC boost_stacktrace_backtrace)
+    endif()
 endfunction()
 

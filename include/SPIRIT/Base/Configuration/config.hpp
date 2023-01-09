@@ -59,10 +59,14 @@
 // msys/gcc would define Linux as the platform.
 #if defined(SPIRIT_OS_WINDOWS)
 #    undef SPIRIT_API
-#    if defined(SPIRIT_EXPORT)
-#        define SPIRIT_API __declspec(dllexport)
-#    else
-#        define SPIRIT_API __declspec(dllimport)
+#    if defined(SPIRIT_SHARED_LIBS)
+#       if defined(SPIRIT_EXPORT)
+#           define SPIRIT_API __declspec(dllexport)
+#       else
+#           define SPIRIT_API __declspec(dllimport)
+#       endif
+#    else 
+#       define SPIRIT_API
 #    endif
 
 #elif defined(SPIRIT_OS_LINUX)
