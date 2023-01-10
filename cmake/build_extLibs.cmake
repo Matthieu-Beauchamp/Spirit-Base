@@ -81,10 +81,22 @@ function(build_Boost boost_root target)
     # Here we choose one, this is not portable. 
     # If we can detect if building for x86 or x64, we could at least adapt a bit more
     if (${CMAKE_SYSTEM_NAME} MATCHES "Windows")
-    	target_link_libraries(${target} PUBLIC 
-    	    $<IF:$<CONFIG:Debug>, libboost_stacktrace_windbg-mt-gd-x64, 
-    	                          libboost_stacktrace_windbg-mt-x64>
+        if(${MSVC})
+            target_link_libraries(${target} PUBLIC 
+    	        $<IF:$<EQUAL:${CMAKE_SIZEOF_VOID_P}, 4>
+                    # 32 bits
+                    $<IF:$<CONFIG:Debug>, libboost_stacktrace_windbg-mt-gd-x32, 
+                                          libboost_stacktrace_windbg-mt-x32
+                    >,
+                    # else 64 bits
+                    $<IF:$<CONFIG:Debug>, libboost_stacktrace_windbg-mt-gd-x64, 
+                                          libboost_stacktrace_windbg-mt-x64
+                    >
+                >    
     	    )
+        else()  # ? what about mingw, etc..?
+    	    
+        endif()
     else()
         target_link_libraries(${target} PUBLIC boost_stacktrace_backtrace)
     endif()
