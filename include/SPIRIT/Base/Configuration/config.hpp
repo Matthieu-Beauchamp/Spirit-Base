@@ -101,26 +101,6 @@
 #    define SPIRIT_DEBUG
 #endif
 
-////////////////////////////////////////////////////////////
-/// \ingroup Configuration
-/// \brief Enables all logging
-///
-/// By default everything is logged in Debug and only warnings
-/// and errors will be logged in Release. (Logging is sent to stdout)
-///
-/// define SPIRIT_VERBOSE to SPIRIT_TRUE to log everything
-////////////////////////////////////////////////////////////
-#ifndef SPIRIT_VERBOSE
-#    define SPIRIT_VERBOSE SPIRIT_FALSE
-#    ifdef SPIRIT_DEBUG
-#        define SPDLOG_ACTIVE_LEVEL SPDLOG_LEVEL_TRACE
-#    else
-#        define SPDLOG_ACTIVE_LEVEL SPDLOG_LEVEL_WARN
-#    endif
-#else
-#    define SPDLOG_ACTIVE_LEVEL SPDLOG_LEVEL_TRACE
-#endif
-
 
 namespace sp
 {
@@ -142,21 +122,6 @@ typedef std::int64_t Int64;
 typedef std::uint64_t Uint64;
 
 } // namespace sp
-
-
-////////////////////////////////////////////////////////////
-// SPDLOG configuration
-////////////////////////////////////////////////////////////
-
-// Pretty function output for Loggers
-// TODO: We should fork spdlog and modify the tweakme.hpp
-#ifndef SPDLOG_FUNCTION
-#    ifdef __PRETTY_FUNCTION__
-#        define SPDLOG_FUNCTION __PRETTY_FUNCTION__
-#    else
-#        define SPDLOG_FUNCTION __FUNCTION__
-#    endif
-#endif
 
 
 #endif // SPIRIT_CONFIG_HPP
