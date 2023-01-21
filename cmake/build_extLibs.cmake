@@ -26,12 +26,15 @@ function(build_Boost boost_root target)
         set(B2_FLAGS ${B2_FLAGS} link=static)    
     endif()
 
+    if(${MSVC})
+        set(B2_FLAGS ${B2_FLAGS} --layout=tagged)    
+    endif()
+
     # TODO: Use the same compiler ...
 
     macro(compileFlag flag)
         target_compile_definitions(${target} PRIVATE ${flag})
         set(B2_FLAGS ${B2_FLAGS} cxxflags=-D${flag})    
-        set(B2_FLAGS ${B2_FLAGS} --layout=tagged)    
     endmacro()
 
     set(BOOST_LINK_DIR "${boost_root}/stage/lib")
