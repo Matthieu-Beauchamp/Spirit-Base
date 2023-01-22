@@ -30,11 +30,13 @@
 #include "SPIRIT/Base/Logging/Format.hpp"
 #include "spdlog/logger.h"
 
-// TODO: How do we deal with this?
-#ifdef __GNUC__ 
-    #include <experimental/source_location> // on gcc 12
+
+#if __has_include(<source_location>)
+#    include <source_location>
+#elif __has_include(<experimental/source_location>)
+#    include <experimental/source_location>
 #else
-    #include <source_location>              // msvc 19.34
+#    error "No std::source_location is available"
 #endif
 
 namespace sp
@@ -50,10 +52,10 @@ class MessageBase
 {
 public:
 
-#ifdef __GNUC__ 
-    typedef std::experimental::source_location SourceLocation; // on gcc 12
-#else
-    typedef std::source_location SourceLocation; // msvc 19.34
+#if __has_include(<source_location>)
+    typedef std::source_location SourceLocation;
+#elif __has_include(<experimental/source_location>)
+    typedef std::experimental::source_location SourceLocation;
 #endif
 
 

@@ -42,7 +42,15 @@ TEST_CASE("Messages")
     SECTION("Source location")
     {
         REQUIRE(sp::Info{}.sourceLoc().line() == __LINE__);
-        REQUIRE(std::string{sp::Info{}.sourceLoc().function_name()} == std::string{__FUNCTION__});
+
+        #if defined(__GNUC__) || defined(__clang__)
+            REQUIRE(std::string{sp::Info{}.sourceLoc().function_name()} == std::string{__PRETTY_FUNCTION__});
+        #elif defined(_MSC_VER)
+            REQUIRE(std::string{sp::Info{}.sourceLoc().function_name()} == std::string{__FUNCSIG__});
+        #else
+            REQUIRE(std::string{sp::Info{}.sourceLoc().function_name()} == std::string{__FUNCTION__});
+        #endif
+        
         REQUIRE(std::string{sp::Info{}.sourceLoc().file_name()} == std::string{__FILE__});
     }
 }
