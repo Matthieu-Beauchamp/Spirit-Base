@@ -83,7 +83,7 @@ function(build_Boost boost_root target)
     if (${CMAKE_SYSTEM_NAME} MATCHES "Windows")
         if(${MSVC})
             target_link_libraries(${target} PUBLIC 
-    	        $<IF:$<EQUAL:${CMAKE_SIZEOF_VOID_P}, 4>
+    	        $<IF:$<EQUAL:${CMAKE_SIZEOF_VOID_P},4>,
                     # 32 bits
                     $<IF:$<CONFIG:Debug>, libboost_stacktrace_windbg-mt-gd-x32, 
                                           libboost_stacktrace_windbg-mt-x32

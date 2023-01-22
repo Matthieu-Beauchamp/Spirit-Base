@@ -88,9 +88,9 @@ protected:
         int Cpos = SEEK_CUR;
         switch (basePos)
         {
-        case std::ios_base::beg: Cpos = SEEK_SET; break;
-        case std::ios_base::cur: Cpos = SEEK_CUR; break;
-        case std::ios_base::end: Cpos = SEEK_END; break;
+            case std::ios_base::beg: Cpos = SEEK_SET; break;
+            case std::ios_base::cur: Cpos = SEEK_CUR; break;
+            case std::ios_base::end: Cpos = SEEK_END; break;
         }
         fseek(targetFile, static_cast<sp::Int32>(offset * sizeof(char_type)), Cpos);
 
@@ -141,11 +141,23 @@ protected:
         return fread(dest, sizeof(char_type), n, targetFile);
     }
 
-    std::size_t
+    // {wrote, filePtrDiff}
+    std::pair<std::size_t, std::size_t>
     write(const char_type * src, pos_type seekPos, std::size_t n)
     {
         seekpos(seekPos, std::ios_base::out);
-        return fwrite(src, sizeof(char_type), n, targetFile);
+#if defined(SPIRIT_OS_WINDOWS)
+        // Windows may append \r after \n, which will not be included in the
+        // value returned by fwrite. We need to manually check the position diff
+        int start            = ftell(targetFile);
+        std::size_t nWritten = fwrite(src, sizeof(char_type), n, targetFile);
+        std::size_t diff     = ftell(targetFile) - start;
+#else
+        std::size_t nWritten = fwrite(src, sizeof(char_type), n, targetFile);
+        std::size_t diff     = nWritten;
+#endif
+
+        return {nWritten, diff};
     }
 
     ////////////////////////////////////////////////////////////
@@ -177,22 +189,40 @@ template <std::streamsize bufSize, typename char_type>
 struct ioBuffer
 {
 private:
+
     struct array : public std::array<char_type, bufSize>
     {
         typedef std::array<char_type, bufSize> Base;
         // typedef iterator types and stuff...
-        
+
         using Base::Base;
 
         // MSVC won't convert std::array's begin and end to T*
-        char_type * begin() {return this->data();}
-        const char_type * begin() const {return this->data();}
+        char_type *
+        begin()
+        {
+            return this->data();
+        }
+        const char_type *
+        begin() const
+        {
+            return this->data();
+        }
 
-        char_type * end() {return this->data() + this->size();}
-        const char_type * end() const {return this->data() + this->size();}
+        char_type *
+        end()
+        {
+            return this->data() + this->size();
+        }
+        const char_type *
+        end() const
+        {
+            return this->data() + this->size();
+        }
     };
 
 public:
+
     array buf;
     std::streamsize pos = 0;
 };
@@ -390,9 +420,10 @@ protected:
         if (n > bufSize)
         {
             this->overflow(traits_type::eof());
-            std::streamsize wrote = Base::write(str, io.out.pos, static_cast<std::size_t>(n));
-            io.out.pos += wrote;
-            return wrote;
+            auto wrote
+                = Base::write(str, io.out.pos, static_cast<std::size_t>(n));
+            io.out.pos += wrote.second;
+            return wrote.first;
         }
         else
         {
@@ -406,8 +437,8 @@ protected:
         if (mode & std::ios_base::out)
         {
             size_t filled = this->pptr() - this->pbase();
-            size_t wrote  = Base::write(io.out.buf.begin(), io.out.pos, filled);
-            io.out.pos += wrote;
+            auto wrote  = Base::write(io.out.buf.begin(), io.out.pos, filled);
+            io.out.pos += wrote.second;
 
             this->setp(
                 io.out.buf.begin(),
@@ -445,21 +476,25 @@ constexpr static std::streamsize bufSizeDefault = 128;
 typedef char charTypeDefault;
 typedef wchar_t wCharTypeDefault;
 
-typedef SPIRIT_API sp::details::FileBuf<std::ios_base::out, bufSizeDefault, charTypeDefault>
-    OutFileBuf;
+typedef SPIRIT_API
+    sp::details::FileBuf<std::ios_base::out, bufSizeDefault, charTypeDefault>
+        OutFileBuf;
 
-typedef SPIRIT_API sp::details::FileBuf<std::ios_base::in, bufSizeDefault, charTypeDefault>
-    InFileBuf;
+typedef SPIRIT_API
+    sp::details::FileBuf<std::ios_base::in, bufSizeDefault, charTypeDefault>
+        InFileBuf;
 
 typedef SPIRIT_API sp::details::
     FileBuf<std::ios_base::in | std::ios_base::out, bufSizeDefault, charTypeDefault>
         IOFileBuf;
 
-typedef SPIRIT_API sp::details::FileBuf<std::ios_base::out, bufSizeDefault, wCharTypeDefault>
-    wOutFileBuf;
+typedef SPIRIT_API
+    sp::details::FileBuf<std::ios_base::out, bufSizeDefault, wCharTypeDefault>
+        wOutFileBuf;
 
-typedef SPIRIT_API sp::details::FileBuf<std::ios_base::in, bufSizeDefault, wCharTypeDefault>
-    wInFileBuf;
+typedef SPIRIT_API
+    sp::details::FileBuf<std::ios_base::in, bufSizeDefault, wCharTypeDefault>
+        wInFileBuf;
 
 typedef SPIRIT_API sp::details::
     FileBuf<std::ios_base::in | std::ios_base::out, bufSizeDefault, wCharTypeDefault>
