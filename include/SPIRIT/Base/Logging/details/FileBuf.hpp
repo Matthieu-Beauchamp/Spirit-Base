@@ -71,6 +71,10 @@ protected:
     // Positioning
     ////////////////////////////////////////////////////////////
 
+    // should be private...?
+    std::size_t tell() const
+    {return ftell(targetFile) / sizeof(char_type);}
+
     // TODO: Changing the buffer is not yet supported (should it?)
 
     // offset is assumed to be in terms of char_type.
@@ -94,7 +98,7 @@ protected:
         }
         fseek(targetFile, static_cast<sp::Int32>(offset * sizeof(char_type)), Cpos);
 
-        return ftell(targetFile) / sizeof(char_type);
+        return tell();
     }
 
     pos_type
@@ -134,11 +138,26 @@ protected:
     //  n is the number of char_type to read
     ////////////////////////////////////////////////////////////
 
-    std::size_t
+    // TODO: Windows appends a char '\r' when we are working with wchar_t
+
+    // read, diff
+    std::pair<size_t, size_t>
     read(char_type * dest, pos_type seekPos, std::size_t n)
     {
         seekpos(seekPos, std::ios_base::in);
-        return fread(dest, sizeof(char_type), n, targetFile);
+
+#if defined(SPIRIT_OS_WINDOWS)
+        // Windows may skip \r when reading \n, which will not be included in the
+        // value returned by fread. We need to manually check the position diff
+        std::size_t start = tell();
+        std::size_t nRead = fread(dest, sizeof(char_type), n, targetFile);
+        std::size_t diff  = tell() - start;
+#else
+        std::size_t nRead    = fread(dest, sizeof(char_type), n, targetFile);
+        std::size_t diff     = nRead;
+#endif
+
+        return {nRead, diff};
     }
 
     // {wrote, filePtrDiff}
@@ -149,9 +168,9 @@ protected:
 #if defined(SPIRIT_OS_WINDOWS)
         // Windows may append \r after \n, which will not be included in the
         // value returned by fwrite. We need to manually check the position diff
-        int start            = ftell(targetFile);
+        std::size_t start            = tell();
         std::size_t nWritten = fwrite(src, sizeof(char_type), n, targetFile);
-        std::size_t diff     = ftell(targetFile) - start;
+        std::size_t diff     = tell() - start;
 #else
         std::size_t nWritten = fwrite(src, sizeof(char_type), n, targetFile);
         std::size_t diff     = nWritten;
@@ -391,19 +410,19 @@ protected:
             if (available == -1)
                 return traits_type::eof();
 
-            size_t nRead = Base::read(io.in.buf.begin(), io.in.pos, bufSize);
-            io.in.pos += nRead;
+            auto nRead = Base::read(io.in.buf.begin(), io.in.pos, bufSize);
+            io.in.pos += nRead.second;
 
             this->setg(
                 io.in.buf.begin(),
                 io.in.buf.begin(),
-                io.in.buf.begin() + nRead
+                io.in.buf.begin() + nRead.first
             );
 
             if (Base::checkError() != 0)
                 return traits_type::eof();
 
-            return nRead == 0 ? traits_type::eof()
+            return nRead.first == 0 ? traits_type::eof()
                               : traits_type::to_int_type(*this->gptr());
         }
 
@@ -437,7 +456,7 @@ protected:
         if (mode & std::ios_base::out)
         {
             size_t filled = this->pptr() - this->pbase();
-            auto wrote  = Base::write(io.out.buf.begin(), io.out.pos, filled);
+            auto wrote    = Base::write(io.out.buf.begin(), io.out.pos, filled);
             io.out.pos += wrote.second;
 
             this->setp(
